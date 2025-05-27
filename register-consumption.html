@@ -272,6 +272,150 @@
         </div>
     </div>
 
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Referencias a elementos del DOM
+            const searchBtn = document.getElementById('search-employee-btn');
+            const employeeNumberInput = document.getElementById('employee-number-search');
+            const employeeInfo = document.getElementById('employee-info');
+            const mealSelection = document.getElementById('meal-selection');
+            const errorMessage = document.getElementById('error-message');
+            const errorText = document.getElementById('error-text');
+            const successMessage = document.getElementById('success-message');
+            const successText = document.getElementById('success-text');
+            const employeeNameDisplay = document.getElementById('employee-name-display');
+            const employeeIdDisplay = document.getElementById('employee-id-display');
+            const employeeDepartmentDisplay = document.getElementById('employee-department-display');
+            const employeePhotoDisplay = document.getElementById('employee-photo-display');
+            const consumptionForm = document.getElementById('consumption-form');
+            const searchHint = document.getElementById('search-hint');
+
+            let currentEmployee = null;
+
+            function showError(message) {
+                successMessage.classList.add('hidden');
+                errorText.textContent = message;
+                errorMessage.classList.remove('hidden');
+                setTimeout(() => {
+                    errorMessage.classList.add('hidden');
+                }, 5000);
+            }
+
+            function showSuccess(message) {
+                errorMessage.classList.add('hidden');
+                successText.textContent = message;
+                successMessage.classList.remove('hidden');
+                setTimeout(() => {
+                    successMessage.classList.add('hidden');
+                }, 5000);
+            }
+
+            function searchEmployee() {
+                const employeeNumber = employeeNumberInput.value.trim();
+                if (!employeeNumber) {
+                    showError('Por favor, ingrese un número de empleado.');
+                    return;
+                }
+
+                searchBtn.innerHTML = '<svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Buscando...';
+                searchBtn.disabled = true;
+
+                setTimeout(() => {
+                    const employees = JSON.parse(localStorage.getItem('employees')) || [];
+                    const employee = employees.find(emp => emp.employeeNumber === employeeNumber);
+
+                    searchBtn.innerHTML = 'Buscar';
+                    searchBtn.disabled = false;
+
+                    if (employee) {
+                        currentEmployee = employee;
+
+                        employeeNameDisplay.textContent = employee.employeeName;
+                        employeeIdDisplay.textContent = employee.employeeNumber;
+                        employeeDepartmentDisplay.textContent = employee.department;
+
+                        employeePhotoDisplay.src = employee.photo
+                            ? employee.photo
+                            : 'https://via.placeholder.com/150?text=' + employee.employeeName.charAt(0);
+
+                        employeeInfo.classList.remove('hidden');
+                        mealSelection.classList.remove('hidden');
+                        errorMessage.classList.add('hidden');
+
+                        searchHint.textContent = 'Empleado encontrado. Ahora selecciona el tipo de comida.';
+                        document.getElementById('meal-type').focus();
+                    } else {
+                        showError('Empleado no encontrado. Verifique el número de empleado.');
+                        employeeInfo.classList.add('hidden');
+                        mealSelection.classList.add('hidden');
+                        currentEmployee = null;
+                        searchHint.textContent = 'Intenta con otro número de empleado o registra al empleado primero.';
+                    }
+                }, 1000);
+            }
+
+            searchBtn.addEventListener('click', searchEmployee);
+
+            employeeNumberInput.addEventListener('keypress', function (event) {
+                if (event.key === 'Enter') {
+                    event.preventDefault();
+                    searchEmployee();
+                }
+            });
+
+            // Manejar el envío del formulario
+            consumptionForm.addEventListener('submit', async function (event) {
+                event.preventDefault();
+
+                if (!currentEmployee) {
+                    showError('Por favor, busque un empleado primero.');
+                    return;
+                }
+
+                const mealType = document.getElementById('meal-type').value;
+
+                if (!mealType) {
+                    showError('Por favor, seleccione un tipo de comida.');
+                    return;
+                }
+
+                const consumption = {
+                    EmployeeId: currentEmployee.employeeNumber,
+                    FoodType: mealType,
+                    Amount: 1, // Asumiendo que cada consumo es de una unidad
+                    timestamp: new Date().toISOString()
+                };
+
+                try {
+                    const response = await fetch('https://jnhnlieyq9.execute-api.us-east-2.amazonaws.com/default/api/consumptions', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(consumption)
+                    });
+
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(errorData.message || 'Error al registrar el consumo.');
+                    }
+
+                    showSuccess(`Consumo de ${mealType} registrado para ${currentEmployee.employeeName}`);
+
+                    consumptionForm.reset();
+                    employeeInfo.classList.add('hidden');
+                    mealSelection.classList.add('hidden');
+                    currentEmployee = null;
+                    searchHint.textContent = 'Ingresa el número de empleado para registrar un nuevo consumo.';
+                    employeeNumberInput.focus();
+                } catch (error) {
+                    console.error('Error al registrar consumo:', error);
+                    showError('No se pudo registrar el consumo. Intenta de nuevo.');
+                }
+            });
+        });
+    </script>
+
     <!-- Flowbite JS para funcionalidad de componentes UI -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/flowbite/2.2.0/flowbite.min.js"></script>
 </body>

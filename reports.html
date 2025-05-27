@@ -322,527 +322,539 @@
         </div>
     </div>
 
+    <!-- Script para manejar los reportes -->
     <script>
-        // Variables globales para los gráficos
-        let mealTypeChart = null;
-        let dailyChart = null;
-        let currentPeriodType = 'monthly';
-        
-        // Función para generar datos de ejemplo aleatorios
-        function generateSampleData() {
-            const employees = [
-                'Juan Pérez', 'María García', 'Carlos López', 'Ana Martín', 'Luis Rodríguez',
-                'Carmen Sánchez', 'Pedro González', 'Laura Fernández', 'Miguel Torres', 'Elena Ruiz',
-                'David Morales', 'Isabel Castro', 'Javier Herrera', 'Cristina Jiménez', 'Roberto Silva'
-            ];
-            
-            const mealTypes = ['Desayuno', 'Almuerzo', 'Cena', 'Merienda'];
-            const data = {};
-            
-            // Generar datos para los últimos 30 días
-            for (let i = 0; i < 30; i++) {
-                const date = new Date();
-                date.setDate(date.getDate() - i);
-                const dateStr = date.toISOString().split('T')[0];
-                
-                // Generar entre 5 y 25 consumos por día
-                const numConsumptions = Math.floor(Math.random() * 20) + 5;
-                const dayConsumptions = [];
-                
-                for (let j = 0; j < numConsumptions; j++) {
-                    const employee = employees[Math.floor(Math.random() * employees.length)];
-                    const mealType = mealTypes[Math.floor(Math.random() * mealTypes.length)];
-                    
-                    // Generar hora basada en el tipo de comida
-                    let hour, minute;
-                    switch (mealType) {
-                        case 'Desayuno':
-                            hour = Math.floor(Math.random() * 3) + 7; // 7-9 AM
-                            break;
-                        case 'Almuerzo':
-                            hour = Math.floor(Math.random() * 3) + 12; // 12-2 PM
-                            break;
-                        case 'Merienda':
-                            hour = Math.floor(Math.random() * 2) + 15; // 3-4 PM
-                            break;
-                        case 'Cena':
-                            hour = Math.floor(Math.random() * 3) + 18; // 6-8 PM
-                            break;
-                    }
-                    minute = Math.floor(Math.random() * 60);
-                    
-                    const time = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
-                    const employeeNumber = (Math.floor(Math.random() * 999) + 1).toString().padStart(3, '0');
-                    
-                    dayConsumptions.push({
-                        date: dateStr,
-                        time: time,
-                        employee: employee,
-                        number: employeeNumber,
-                        mealType: mealType
-                    });
-                }
-                
-                // Ordenar por hora
-                dayConsumptions.sort((a, b) => a.time.localeCompare(b.time));
-                data[dateStr] = { consumptions: dayConsumptions };
-            }
-            
-            return data;
-        }
-
-        // Generar datos de ejemplo
-        const sampleData = generateSampleData();
-
-        // Función para obtener los últimos N meses únicos
-        function getAvailableMonths() {
-            const months = new Set();
-            const today = new Date();
-            
-            for (let i = 0; i < 90; i++) { // Últimos 3 meses
-                const date = new Date();
-                date.setDate(today.getDate() - i);
-                const monthKey = `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}`;
-                months.add(monthKey);
-            }
-            
-            return Array.from(months).sort().reverse();
-        }
-
-        // Función para obtener los últimos 30 días
-        function getAvailableDays() {
-            const days = [];
-            const today = new Date();
-            
-            for (let i = 0; i < 30; i++) {
-                const date = new Date();
-                date.setDate(today.getDate() - i);
-                const dateStr = date.toISOString().split('T')[0];
-                days.push(dateStr);
-            }
-            
-            return days;
-        }
-
-        // Función para inicializar la página
-        function initializePage() {
-            setupEventListeners();
-            populatePeriodSelector();
-        }
-
-        // Función para configurar event listeners
-        function setupEventListeners() {
-            const reportTypeSelect = document.getElementById('report-type');
-            const periodSelect = document.getElementById('period-select');
-            
-            reportTypeSelect.addEventListener('change', handleReportTypeChange);
-            periodSelect.addEventListener('change', handlePeriodChange);
-            
-            const exportCsvBtn = document.getElementById('export-csv');
-            exportCsvBtn.addEventListener('click', exportToCSV);
-            
-            const printBtn = document.getElementById('print-report');
-            printBtn.addEventListener('click', printReport);
-        }
-
-        // Función para manejar el cambio de tipo de reporte
-        function handleReportTypeChange(event) {
-            currentPeriodType = event.target.value;
-            populatePeriodSelector();
-            updateHelpText();
-        }
-
-        // Función para actualizar el texto de ayuda
-        function updateHelpText() {
-            const helpText = document.getElementById('period-help-text');
-            if (currentPeriodType === 'daily') {
-                helpText.textContent = 'Selecciona un día específico de los últimos 30 días';
-            } else {
-                helpText.textContent = 'Selecciona un mes para ver los reportes correspondientes';
-            }
-        }
-
-        // Función para poblar el selector de período
-        function populatePeriodSelector() {
-            const select = document.getElementById('period-select');
-            
-            // Limpiar opciones existentes
-            select.innerHTML = '';
-            
-            // Agregar opción por defecto
-            const defaultOption = document.createElement('option');
-            defaultOption.value = '';
-            defaultOption.disabled = true;
-            defaultOption.selected = true;
-            defaultOption.textContent = 'Selecciona un período...';
-            select.appendChild(defaultOption);
-            
-            if (currentPeriodType === 'monthly') {
-                // Agregar meses disponibles
-                const months = getAvailableMonths();
-                months.forEach(month => {
-                    const option = document.createElement('option');
-                    option.value = month;
-                    
-                    // Formatear el nombre del mes
-                    const [year, monthNum] = month.split('-');
-                    const monthNames = [
-                        'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
-                        'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
-                    ];
-                    option.textContent = `${monthNames[parseInt(monthNum) - 1]} ${year}`;
-                    select.appendChild(option);
-                });
-            } else {
-                // Agregar días disponibles
-                const days = getAvailableDays();
-                days.forEach(day => {
-                    const option = document.createElement('option');
-                    option.value = day;
-                    
-                    // Formatear la fecha
-                    const date = new Date(day + 'T00:00:00');
-                    const dayNames = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
-                    const monthNames = [
-                        'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
-                        'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
-                    ];
-                    
-                    const dayName = dayNames[date.getDay()];
-                    const dayNum = date.getDate();
-                    const monthName = monthNames[date.getMonth()];
-                    const year = date.getFullYear();
-                    
-                    option.textContent = `${dayName}, ${dayNum} de ${monthName} ${year}`;
-                    select.appendChild(option);
-                });
-            }
-        }
-
-        // Función para manejar el cambio de período
-        function handlePeriodChange(event) {
-            const selectedValue = event.target.value;
-            if (!selectedValue) return;
-            
-            let data;
-            if (currentPeriodType === 'monthly') {
-                // Agregar todos los consumos del mes
-                data = { consumptions: [] };
-                Object.keys(sampleData).forEach(date => {
-                    if (date.startsWith(selectedValue)) {
-                        data.consumptions.push(...sampleData[date].consumptions);
-                    }
-                });
-            } else {
-                // Datos de un día específico
-                data = sampleData[selectedValue] || { consumptions: [] };
-            }
-            
-            updateReportData(data, currentPeriodType, selectedValue);
-            updateChartTitles(currentPeriodType);
-        }
-
-        // Función para actualizar los títulos de los gráficos según el tipo de reporte
-        function updateChartTitles(type) {
-            const timeChartTitle = document.getElementById('time-chart-title');
-            const timeChartDescription = document.getElementById('time-chart-description');
-            
-            if (type === 'daily') {
-                timeChartTitle.textContent = 'Consumos por Hora';
-                timeChartDescription.textContent = 'Distribución de consumos durante el día';
-            } else {
-                timeChartTitle.textContent = 'Consumos por Día';
-                timeChartDescription.textContent = 'Tendencia de consumos a lo largo del mes';
-            }
-        }
-
-        // Función para actualizar los datos del reporte
-        function updateReportData(data, type, period) {
-            const consumptions = data.consumptions;
-            
-            // Actualizar tarjetas de resumen
-            updateSummaryCards(consumptions);
-            
-            // Actualizar gráficos
-            updateCharts(consumptions, type);
-            
-            // Actualizar tabla
-            updateTable(consumptions, type);
-            
-            // Actualizar información de la tabla
+        document.addEventListener('DOMContentLoaded', async function() {
+            // Referencias a elementos del DOM
+            const monthSelect = document.getElementById('month-select');
+            const totalConsumptionsEl = document.getElementById('total-consumptions');
+            const totalEmployeesEl = document.getElementById('total-employees');
+            const popularMealEl = document.getElementById('popular-meal');
+            const consumptionTableBody = document.getElementById('consumption-table-body');
             const tableInfo = document.getElementById('table-info');
-            let periodText;
-            if (type === 'daily') {
-                const date = new Date(period + 'T00:00:00');
-                periodText = `día ${date.toLocaleDateString('es-ES')}`;
-            } else {
-                const [year, month] = period.split('-');
-                const monthNames = [
-                    'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
-                    'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
-                ];
-                periodText = `mes de ${monthNames[parseInt(month) - 1]} ${year}`;
-            }
-            tableInfo.textContent = `Mostrando ${consumptions.length} registros para el ${periodText}.`;
-        }
-
-        // Función para actualizar las tarjetas de resumen
-        function updateSummaryCards(consumptions) {
-            // Total de consumos
-            document.getElementById('total-consumptions').textContent = consumptions.length;
+            const exportCsvBtn = document.getElementById('export-csv');
+            const printReportBtn = document.getElementById('print-report');
             
-            // Empleados únicos
-            const uniqueEmployees = new Set(consumptions.map(c => c.employee));
-            document.getElementById('total-employees').textContent = uniqueEmployees.size;
+            // Variables para los gráficos
+            let mealTypeChart;
+            let dailyChart;
             
-            // Tipo de comida más popular
-            const mealTypeCounts = {};
-            consumptions.forEach(c => {
-                mealTypeCounts[c.mealType] = (mealTypeCounts[c.mealType] || 0) + 1;
-            });
+            // Configuración de colores para los gráficos
+            const chartColors = {
+                backgroundColor: [
+                    'rgba(16, 185, 129, 0.7)',  // Emerald
+                    'rgba(234, 179, 8, 0.7)',   // Gold
+                    'rgba(59, 130, 246, 0.7)',  // Blue
+                    'rgba(139, 92, 246, 0.7)'   // Purple
+                ],
+                borderColor: [
+                    'rgba(16, 185, 129, 1)',
+                    'rgba(234, 179, 8, 1)',
+                    'rgba(59, 130, 246, 1)',
+                    'rgba(139, 92, 246, 1)'
+                ]
+            };
             
-            const popularMeal = Object.keys(mealTypeCounts).reduce((a, b) => 
-                mealTypeCounts[a] > mealTypeCounts[b] ? a : b, '-'
-            );
-            document.getElementById('popular-meal').textContent = popularMeal;
-        }
-
-        // Función para actualizar los gráficos
-        function updateCharts(consumptions, type) {
-            updateMealTypeChart(consumptions);
-            updateTimeChart(consumptions, type);
-        }
-
-        // Función para actualizar el gráfico de tipos de comida
-        function updateMealTypeChart(consumptions) {
-            const ctx = document.getElementById('meal-type-chart').getContext('2d');
+            // Configuración global de Chart.js para tema oscuro
+            Chart.defaults.color = '#94a3b8';
+            Chart.defaults.borderColor = '#334155';
             
-            // Contar tipos de comida
-            const mealTypeCounts = {};
-            consumptions.forEach(c => {
-                mealTypeCounts[c.mealType] = (mealTypeCounts[c.mealType] || 0) + 1;
-            });
+               try {
+        const response = await fetch('https://jnhnlieyq9.execute-api.us-east-2.amazonaws.com/default/api/consumptions/today');
+        const consumptions = await response.json();
             
-            // Destruir gráfico anterior si existe
-            if (mealTypeChart) {
-                mealTypeChart.destroy();
-            }
-            
-            mealTypeChart = new Chart(ctx, {
-                type: 'doughnut',
-                data: {
-                    labels: Object.keys(mealTypeCounts),
-                    datasets: [{
-                        data: Object.values(mealTypeCounts),
-                        backgroundColor: [
-                            '#10b981', // emerald-500
-                            '#eab308', // gold-500
-                            '#3b82f6', // blue-500
-                            '#ef4444', // red-500
-                            '#8b5cf6'  // violet-500
-                        ],
-                        borderWidth: 0
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            position: 'bottom',
-                            labels: {
-                                color: '#d1d5db',
-                                padding: 20
-                            }
-                        }
-                    }
-                }
-            });
-        }
-
-        // Función para actualizar el gráfico temporal
-        function updateTimeChart(consumptions, type) {
-            const ctx = document.getElementById('daily-chart').getContext('2d');
-            
-            let chartData;
-            if (type === 'daily') {
-                // Para reportes diarios, agrupar por hora
-                chartData = groupByHour(consumptions);
-            } else {
-                // Para reportes mensuales, agrupar por día
-                chartData = groupByDay(consumptions);
-            }
-            
-            // Destruir gráfico anterior si existe
-            if (dailyChart) {
-                dailyChart.destroy();
-            }
-            
-            dailyChart = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: chartData.labels,
-                    datasets: [{
-                        label: 'Consumos',
-                        data: chartData.data,
-                        borderColor: '#10b981',
-                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
-                        borderWidth: 2,
-                        fill: true,
-                        tension: 0.4
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            labels: {
-                                color: '#d1d5db'
-                            }
-                        }
-                    },
-                    scales: {
-                        x: {
-                            ticks: {
-                                color: '#9ca3af'
-                            },
-                            grid: {
-                                color: '#374151'
-                            }
-                        },
-                        y: {
-                            ticks: {
-                                color: '#9ca3af'
-                            },
-                            grid: {
-                                color: '#374151'
-                            }
-                        }
-                    }
-                }
-            });
-        }
-
-        // Función para agrupar consumos por hora
-        function groupByHour(consumptions) {
-            const hourCounts = {};
-            
-            consumptions.forEach(c => {
-                const hour = c.time.split(':')[0];
-                hourCounts[hour] = (hourCounts[hour] || 0) + 1;
-            });
-            
-            // Crear array de horas de 6 AM a 10 PM
-            const hours = [];
-            const counts = [];
-            for (let i = 6; i <= 22; i++) {
-                const hourStr = i.toString().padStart(2, '0');
-                hours.push(`${hourStr}:00`);
-                counts.push(hourCounts[hourStr] || 0);
-            }
-            
-            return { labels: hours, data: counts };
-        }
-
-        // Función para agrupar consumos por día
-        function groupByDay(consumptions) {
-            const dayCounts = {};
-            
-            consumptions.forEach(c => {
-                const day = c.date.split('-')[2];
-                dayCounts[day] = (dayCounts[day] || 0) + 1;
-            });
-            
-            const days = Object.keys(dayCounts).sort((a, b) => parseInt(a) - parseInt(b));
-            const counts = days.map(day => dayCounts[day]);
-            
-            return { labels: days, data: counts };
-        }
-
-        // Función para actualizar la tabla
-        function updateTable(consumptions, type) {
-            const tbody = document.getElementById('consumption-table-body');
-            tbody.innerHTML = '';
-            
+            // Si no hay consumos, mostrar mensaje
             if (consumptions.length === 0) {
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td colspan="5" class="px-6 py-12 text-center text-gray-500">
-                        <div class="flex flex-col items-center">
-                            <svg class="w-8 h-8 mb-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2M4 13h2m13-8V4a1 1 0 00-1-1H7a1 1 0 00-1 1v1m8 0V4.5"></path>
-                            </svg>
-                            <span>No hay consumos registrados para este período</span>
-                        </div>
-                    </td>
+                // Actualizar tabla
+                consumptionTableBody.innerHTML = `
+                    <tr class="bg-dark-800 border-b border-dark-700">
+                        <td colspan="4" class="px-6 py-10 text-center">
+                            <div class="flex flex-col items-center text-gray-500">
+                                <svg class="w-12 h-12 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                                <p class="text-lg font-medium">No hay consumos registrados</p>
+                                <p class="mt-1">Registra consumos para generar reportes</p>
+                            </div>
+                        </td>
+                    </tr>
                 `;
-                tbody.appendChild(row);
+                
+                // Actualizar selector de meses
+                monthSelect.innerHTML = `
+                    <option value="" disabled selected>No hay datos disponibles</option>
+                `;
+                
+                // Actualizar información de la tabla
+                tableInfo.textContent = "No hay datos de consumo disponibles.";
+                
+                // Deshabilitar botones de exportación
+                exportCsvBtn.disabled = true;
+                exportCsvBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                printReportBtn.disabled = true;
+                printReportBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                
                 return;
             }
             
+            // Llenar selector de meses
+            const months = {};
             consumptions.forEach(consumption => {
-                const row = document.createElement('tr');
-                row.className = 'bg-dark-800 border-b border-dark-700 hover:bg-dark-700 transition-colors';
-                
-                const formattedDate = new Date(consumption.date + 'T00:00:00').toLocaleDateString('es-ES');
-                
-                row.innerHTML = `
-                    <td class="px-6 py-4 font-medium text-white">${formattedDate}</td>
-                    <td class="px-6 py-4 text-gray-300">${consumption.time}</td>
-                    <td class="px-6 py-4 text-gray-300">${consumption.employee}</td>
-                    <td class="px-6 py-4 text-gray-300">${consumption.number}</td>
-                    <td class="px-6 py-4">
-                        <span class="bg-emerald-900/30 text-emerald-400 text-xs font-medium px-2.5 py-0.5 rounded-full">
-                            ${consumption.mealType}
-                        </span>
-                    </td>
-                `;
-                tbody.appendChild(row);
+                const date = new Date(consumption.timestamp);
+                const monthYear = `${date.getFullYear()}-${date.getMonth() + 1}`;
+                const monthName = date.toLocaleString('default', { month: 'long', year: 'numeric' });
+                months[monthYear] = monthName;
             });
-        }
-
-        // Función para exportar a CSV
-        function exportToCSV() {
-            const table = document.querySelector('#consumption-table-body').closest('table');
-            const rows = Array.from(table.querySelectorAll('tr'));
             
-            let csvContent = '';
+            // Ordenar meses (más reciente primero)
+            const sortedMonths = Object.keys(months).sort().reverse();
             
-            // Agregar encabezados
-            const headers = Array.from(table.querySelectorAll('thead th')).map(th => th.textContent.trim());
-            csvContent += headers.join(',') + '\n';
+            // Actualizar selector de meses
+            monthSelect.innerHTML = '';
+            sortedMonths.forEach(monthKey => {
+                const option = document.createElement('option');
+                option.value = monthKey;
+                option.textContent = months[monthKey];
+                monthSelect.appendChild(option);
+            });
             
-            // Agregar datos
-            const dataRows = rows.slice(1); // Omitir encabezado
-            dataRows.forEach(row => {
-                const cells = Array.from(row.querySelectorAll('td')).map(td => {
-                    return '"' + td.textContent.trim().replace(/"/g, '""') + '"';
+            // Función para actualizar los reportes
+            function updateReports() {
+                const selectedMonth = monthSelect.value;
+                const [year, month] = selectedMonth.split('-').map(Number);
+                
+                // Filtrar consumos del mes seleccionado
+                const monthConsumptions = consumptions.filter(consumption => {
+                    const date = new Date(consumption.timestamp);
+                    return date.getFullYear() === year && date.getMonth() + 1 === month;
                 });
-                if (cells.length > 0 && !cells[0].includes('No hay consumos')) {
-                    csvContent += cells.join(',') + '\n';
+                
+                // Actualizar tarjetas de resumen
+                totalConsumptionsEl.textContent = monthConsumptions.length;
+                
+                // Contar empleados únicos
+                const uniqueEmployees = new Set(monthConsumptions.map(c => c.EmployeeId)).size;
+                totalEmployeesEl.textContent = uniqueEmployees;
+                
+                // Encontrar tipo de comida más popular
+                const mealTypeCounts = {};
+                monthConsumptions.forEach(consumption => {
+                    mealTypeCounts[consumption.FoodType] = (mealTypeCounts[consumption.FoodType] || 0) + 1;
+                });
+                
+                let popularMeal = '-';
+                let maxCount = 0;
+                
+                for (const [meal, count] of Object.entries(mealTypeCounts)) {
+                    if (count > maxCount) {
+                        maxCount = count;
+                        popularMeal = meal;
+                    }
                 }
+                
+                popularMealEl.textContent = popularMeal;
+                
+                // Actualizar tabla
+                if (monthConsumptions.length === 0) {
+                    consumptionTableBody.innerHTML = `
+                        <tr class="bg-dark-800 border-b border-dark-700">
+                            <td colspan="4" class="px-6 py-10 text-center">
+                                <div class="flex flex-col items-center text-gray-500">
+                                    <svg class="w-12 h-12 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    </svg>
+                                    <p class="text-lg font-medium">No hay consumos en este período</p>
+                                    <p class="mt-1">Selecciona otro período o registra nuevos consumos</p>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                    
+                    tableInfo.textContent = `No hay consumos registrados en ${months[selectedMonth]}.`;
+                } else {
+                    // Ordenar por fecha (más reciente primero)
+                    monthConsumptions.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+                    
+                    consumptionTableBody.innerHTML = monthConsumptions.map(consumption => {
+                        const date = new Date(consumption.fecha);
+                        const dateString = date.toLocaleDateString();
+                        const timeString = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                        
+                        // Determinar el color del tipo de comida
+                        let mealTypeClass = '';
+                        switch(consumption.FoodType.toLowerCase()) {
+                            case 'desayuno':
+                                mealTypeClass = 'text-emerald-400';
+                                break;
+                            case 'comida':
+                                mealTypeClass = 'text-gold-400';
+                                break;
+                            case 'cena':
+                                mealTypeClass = 'text-blue-400';
+                                break;
+                            case 'snack':
+                                mealTypeClass = 'text-purple-400';
+                                break;
+                            default:
+                                mealTypeClass = 'text-gray-400';
+                        }
+                        
+                        return `
+                            <tr class="bg-dark-800 border-b border-dark-700 hover:bg-dark-700 transition-all">
+                                <td class="px-6 py-4">${dateString} ${timeString}</td>
+                                <td class="px-6 py-4 font-medium text-white">${consumption.EmployeeName}</td>
+                                <td class="px-6 py-4">${consumption.EmployeeId}</td>
+                                <td class="px-6 py-4 ${mealTypeClass} font-medium">${consumption.FoodType}</td>
+                            </tr>
+                        `;
+                    }).join('');
+                    
+                    tableInfo.textContent = `Mostrando ${monthConsumptions.length} consumos de ${months[selectedMonth]}.`;
+                }
+                
+                // Actualizar gráfico de tipos de comida
+                const mealTypeLabels = Object.keys(mealTypeCounts);
+                const mealTypeData = Object.values(mealTypeCounts);
+                
+                if (mealTypeChart) {
+                    mealTypeChart.destroy();
+                }
+                
+                const mealTypeCtx = document.getElementById('meal-type-chart').getContext('2d');
+                mealTypeChart = new Chart(mealTypeCtx, {
+                    type: 'pie',
+                    data: {
+                        labels: mealTypeLabels,
+                        datasets: [{
+                            data: mealTypeData,
+                            backgroundColor: chartColors.backgroundColor,
+                            borderColor: chartColors.borderColor,
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: {
+                                    padding: 20,
+                                    usePointStyle: true,
+                                    pointStyle: 'circle'
+                                }
+                            },
+                            tooltip: {
+                                backgroundColor: '#1e293b',
+                                titleColor: '#ffffff',
+                                bodyColor: '#e2e8f0',
+                                borderColor: '#334155',
+                                borderWidth: 1,
+                                padding: 12,
+                                displayColors: true,
+                                usePointStyle: true
+                            }
+                        }
+                    }
+                });
+                
+                // Actualizar gráfico de consumos diarios
+                const dailyCounts = {};
+                
+                monthConsumptions.forEach(consumption => {
+                    const date = new Date(consumption.fecha);
+                    const day = date.getDate();
+                    dailyCounts[day] = (dailyCounts[day] || 0) + 1;
+                });
+                
+                // Ordenar días
+                const sortedDays = Object.keys(dailyCounts).sort((a, b) => a - b);
+                const dailyData = sortedDays.map(day => dailyCounts[day]);
+                
+                if (dailyChart) {
+                    dailyChart.destroy();
+                }
+                
+                const dailyCtx = document.getElementById('daily-chart').getContext('2d');
+                dailyChart = new Chart(dailyCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: sortedDays.map(day => `Día ${day}`),
+                        datasets: [{
+                            label: 'Consumos',
+                            data: dailyData,
+                            backgroundColor: 'rgba(234, 179, 8, 0.7)',
+                            borderColor: 'rgba(234, 179, 8, 1)',
+                            borderWidth: 1,
+                            borderRadius: 4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    stepSize: 1
+                                },
+                                grid: {
+                                    color: 'rgba(51, 65, 85, 0.5)'
+                                }
+                            },
+                            x: {
+                                grid: {
+                                    color: 'rgba(51, 65, 85, 0.5)'
+                                }
+                            }
+                        },
+                        plugins: {
+                            tooltip: {
+                                backgroundColor: '#1e293b',
+                                titleColor: '#ffffff',
+                                bodyColor: '#e2e8f0',
+                                borderColor: '#334155',
+                                borderWidth: 1,
+                                padding: 12
+                            }
+                        }
+                    }
+                });
+            }
+            
+            // Evento de cambio de mes
+            monthSelect.addEventListener('change', updateReports);
+            
+            // Exportar a CSV
+            exportCsvBtn.addEventListener('click', function() {
+                const selectedMonth = monthSelect.value;
+                const [year, month] = selectedMonth.split('-').map(Number);
+                
+                // Filtrar consumos del mes seleccionado
+                const monthConsumptions = consumptions.filter(consumption => {
+                    const date = new Date(consumption.fecha);
+                    return date.getFullYear() === year && date.getMonth() + 1 === month;
+                });
+                
+                // Ordenar por fecha (más reciente primero)
+                monthConsumptions.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+                
+                // Crear contenido CSV
+                let csvContent = "data:text/csv;charset=utf-8,";
+                csvContent += "Fecha,Hora,Empleado,Número,Tipo de Comida\n";
+                
+                monthConsumptions.forEach(consumption => {
+                    const date = new Date(consumption.fecha);
+                    const dateString = date.toLocaleDateString();
+                    const timeString = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                    
+                    csvContent += `${dateString},${timeString},${consumption.EmployeeName},${consumption.EmployeeId},${consumption.FoodType}\n`;
+                });
+                
+                // Crear enlace de descarga
+                const encodedUri = encodeURI(csvContent);
+                const link = document.createElement("a");
+                link.setAttribute("href", encodedUri);
+                link.setAttribute("download", `reporte-comedor-${selectedMonth}.csv`);
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                
+                // Mostrar mensaje de éxito
+                alert('Archivo CSV descargado correctamente.');
             });
             
-            // Descargar archivo
-            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-            const link = document.createElement('a');
-            const url = URL.createObjectURL(blob);
-            link.setAttribute('href', url);
-            link.setAttribute('download', `reporte_consumos_${new Date().toISOString().split('T')[0]}.csv`);
-            link.style.visibility = 'hidden';
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
+            // Imprimir reporte
+            printReportBtn.addEventListener('click', function() {
+                // Preparar contenido para imprimir
+                const selectedMonth = monthSelect.value;
+                const monthName = months[selectedMonth];
+                
+                // Abrir ventana de impresión
+                const printWindow = window.open('', '_blank');
+                
+                // Crear contenido HTML para imprimir
+                printWindow.document.write(`
+                    <!DOCTYPE html>
+                    <html>
+                    <head>
+                        <title>Reporte de Comedor - ${monthName}</title>
+                        <style>
+                            body {
+                                font-family: Arial, sans-serif;
+                                margin: 20px;
+                                color: #333;
+                            }
+                            h1 {
+                                color: #1e293b;
+                                text-align: center;
+                                margin-bottom: 20px;
+                            }
+                            .header {
+                                text-align: center;
+                                margin-bottom: 30px;
+                            }
+                            .date {
+                                font-size: 14px;
+                                color: #666;
+                                margin-bottom: 20px;
+                                text-align: center;
+                            }
+                            .summary {
+                                display: flex;
+                                justify-content: space-between;
+                                margin-bottom: 30px;
+                            }
+                            .summary-card {
+                                border: 1px solid #ddd;
+                                border-radius: 8px;
+                                padding: 15px;
+                                width: 30%;
+                                text-align: center;
+                            }
+                            .summary-title {
+                                font-size: 16px;
+                                font-weight: bold;
+                                margin-bottom: 10px;
+                                color: #1e293b;
+                            }
+                            .summary-value {
+                                font-size: 24px;
+                                font-weight: bold;
+                                color: #0f172a;
+                            }
+                            table {
+                                width: 100%;
+                                border-collapse: collapse;
+                                margin-top: 20px;
+                            }
+                            th, td {
+                                border: 1px solid #ddd;
+                                padding: 12px;
+                                text-align: left;
+                            }
+                            th {
+                                background-color: #f8f9fa;
+                                font-weight: bold;
+                                color: #1e293b;
+                            }
+                            tr:nth-child(even) {
+                                background-color: #f2f2f2;
+                            }
+                            .footer {
+                                margin-top: 30px;
+                                text-align: center;
+                                font-size: 12px;
+                                color: #666;
+                            }
+                            @media print {
+                                .no-print {
+                                    display: none;
+                                }
+                            }
+                        </style>
+                    </head>
+                    <body>
+                        <div class="header">
+                            <h1>Reporte de Consumos del Comedor</h1>
+                            <div class="date">Período: ${monthName}</div>
+                        </div>
+                        
+                        <div class="summary">
+                            <div class="summary-card">
+                                <div class="summary-title">Total de Consumos</div>
+                                <div class="summary-value">${totalConsumptionsEl.textContent}</div>
+                            </div>
+                            <div class="summary-card">
+                                <div class="summary-title">Empleados Atendidos</div>
+                                <div class="summary-value">${totalEmployeesEl.textContent}</div>
+                            </div>
+                            <div class="summary-card">
+                                <div class="summary-title">Comida más Popular</div>
+                                <div class="summary-value">${popularMealEl.textContent}</div>
+                            </div>
+                        </div>
+                        
+                        <h2>Detalle de Consumos</h2>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Fecha</th>
+                                    <th>Hora</th>
+                                    <th>Empleado</th>
+                                    <th>Número</th>
+                                    <th>Tipo de Comida</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${getTableRowsForPrint()}
+                            </tbody>
+                        </table>
+                        
+                        <div class="footer">
+                            <p>Reporte generado el ${new Date().toLocaleDateString()} a las ${new Date().toLocaleTimeString()}</p>
+                            <p>Sistema de Comedor Empresarial</p>
+                        </div>
+                        
+                        <div class="no-print">
+                            <button onclick="window.print()" style="margin-top: 20px; padding: 10px 20px; background-color: #0f172a; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                                Imprimir Reporte
+                            </button>
+                        </div>
+                    </body>
+                    </html>
+                `);
+                
+                // Función para generar filas de la tabla para impresión
+                function getTableRowsForPrint() {
+                    const selectedMonth = monthSelect.value;
+                    const [year, month] = selectedMonth.split('-').map(Number);
+                    
+                    // Filtrar consumos del mes seleccionado
+                    const monthConsumptions = consumptions.filter(consumption => {
+                        const date = new Date(consumption.fecha);
+                        return date.getFullYear() === year && date.getMonth() + 1 === month;
+                    });
+                    
+                    // Ordenar por fecha (más reciente primero)
+                    monthConsumptions.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+                    
+                    return monthConsumptions.map(consumption => {
+                        const date = new Date(consumption.fecha);
+                        const dateString = date.toLocaleDateString();
+                        const timeString = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                        
+                        return `
+                            <tr>
+                                <td>${dateString}</td>
+                                <td>${timeString}</td>
+                                <td>${consumption.EmployeeName}</td>
+                                <td>${consumption.EmployeeId}</td>
+                                <td>${consumption.FoodType}</td>
+                            </tr>
+                        `;
+                    }).join('');
+                }
+                
+                printWindow.document.close();
+            });
+            
+            // Inicializar reportes con el primer mes
+            if (sortedMonths.length > 0) {
+                updateReports();
+            }
+        } catch (error) {
+            console.error('Error al cargar consumos:', error);
+            consumptionTableBody.innerHTML = `
+                <tr class="bg-dark-800 border-b border-dark-700">
+                    <td colspan="4" class="px-6 py-10 text-center text-red-500">
+                        <p>Error al cargar los datos de consumo. Por favor, inténtalo más tarde.</p>
+                    </td>
+                </tr>
+            `;
         }
-
-        // Función para imprimir reporte
-        function printReport() {
-            window.print();
-        }
-
-        // Inicializar la página cuando se carga
-        document.addEventListener('DOMContentLoaded', initializePage);
+        });
+        
     </script>
 
     <!-- Flowbite JS para funcionalidad de componentes UI -->
