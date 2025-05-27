@@ -322,7 +322,7 @@
 
             // Construye la URL del API con el número de empleado
             const apiUrl = `https://jnhnlieyq9.execute-api.us-east-2.amazonaws.com/default/api/employees/${employeeNumber}`;
-
+            console.log(`Buscando empleado en la API: ${apiUrl}`);
             // Realiza la solicitud a la API
             fetch(apiUrl)
                 .then(response => {
@@ -337,12 +337,12 @@
             searchBtn.innerHTML = 'Buscar';
             searchBtn.disabled = false;
 
-            if (employee && employee.Id) { // Asume que la API devuelve un objeto con una propiedad 'Id' si encuentra al empleado
+            if (employee && employee.Id) {
                 currentEmployee = {
-                    employeeNumber: employee.Id, // Asume que 'Id' de la API corresponde a employeeNumber
-                    employeeName: employee.Name, // Asume que 'Name' de la API corresponde a employeeName
-                    department: employee.Role, // Asume que 'Role' de la API corresponde a department
-                    photo: employee.PhotoUrl // Asume que 'PhotoUrl' de la API corresponde a photo
+                    employeeNumber: employee.Id,
+                    employeeName: employee.Name,
+                    department: employee.Role, // 'Role' de la API se mapea a 'department'
+                    photo: employee.PhotoUrl
                 };
 
                 employeeNameDisplay.textContent = currentEmployee.employeeName;
@@ -407,9 +407,9 @@
                 }
 
                 const consumption = {
-                    EmployeeId: currentEmployee.employeeNumber,
-                    FoodType: mealType,
-                    Amount: 1, // Asumiendo que cada consumo es de una unidad
+                    employee_id: currentEmployee.employeeNumber,
+                    food_type: mealType,
+                    amount: 1, // Asumiendo que cada consumo es de una unidad
                 };
 
                 try {
