@@ -321,9 +321,9 @@
         // Función para enviar datos al API Gateway
         async function registerEmployee(name, department, photoUrl) {
             const employeeData = {
-                Name: name,
-                Role: department, // si quieres poner otro valor, cámbialo aquí
-                PhotoUrl: photoUrl,
+                name: name,
+                role: department, // si quieres poner otro valor, cámbialo aquí
+                photoUrl: photoUrl,
             };
             
             try {
