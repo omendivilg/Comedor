@@ -311,48 +311,75 @@
             }
 
             function searchEmployee() {
-                const employeeNumber = employeeNumberInput.value.trim();
-                if (!employeeNumber) {
-                    showError('Por favor, ingrese un número de empleado.');
-                    return;
-                }
-
-                searchBtn.innerHTML = '<svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Buscando...';
-                searchBtn.disabled = true;
-
-                setTimeout(() => {
-                    const employees = JSON.parse(localStorage.getItem('employees')) || [];
-                    const employee = employees.find(emp => emp.employeeNumber === employeeNumber);
-
-                    searchBtn.innerHTML = 'Buscar';
-                    searchBtn.disabled = false;
-
-                    if (employee) {
-                        currentEmployee = employee;
-
-                        employeeNameDisplay.textContent = employee.employeeName;
-                        employeeIdDisplay.textContent = employee.employeeNumber;
-                        employeeDepartmentDisplay.textContent = employee.department;
-
-                        employeePhotoDisplay.src = employee.photo
-                            ? employee.photo
-                            : 'https://via.placeholder.com/150?text=' + employee.employeeName.charAt(0);
-
-                        employeeInfo.classList.remove('hidden');
-                        mealSelection.classList.remove('hidden');
-                        errorMessage.classList.add('hidden');
-
-                        searchHint.textContent = 'Empleado encontrado. Ahora selecciona el tipo de comida.';
-                        document.getElementById('meal-type').focus();
-                    } else {
-                        showError('Empleado no encontrado. Verifique el número de empleado.');
-                        employeeInfo.classList.add('hidden');
-                        mealSelection.classList.add('hidden');
-                        currentEmployee = null;
-                        searchHint.textContent = 'Intenta con otro número de empleado o registra al empleado primero.';
-                    }
-                }, 1000);
+            const employeeNumber = employeeNumberInput.value.trim();
+            if (!employeeNumber) {
+                showError('Por favor, ingrese un número de empleado.');
+                return;
             }
+
+            searchBtn.innerHTML = '<svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Buscando...';
+            searchBtn.disabled = true;
+
+            // Construye la URL del API con el número de empleado
+            const apiUrl = `https://jnhnlieyq9.execute-api.us-east-2.amazonaws.com/default/api/employees/${employeeNumber}`;
+
+            // Realiza la solicitud a la API
+            fetch(apiUrl)
+                .then(response => {
+                    if (!response.ok) {
+                        // Si la respuesta no es OK (ej. 404 Not Found), lanza un error
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.json(); // Parsea la respuesta JSON
+                })
+                .then(employee => {
+            // Elimina el setTimeout ya que fetch es asíncrono
+            searchBtn.innerHTML = 'Buscar';
+            searchBtn.disabled = false;
+
+            if (employee && employee.Id) { // Asume que la API devuelve un objeto con una propiedad 'Id' si encuentra al empleado
+                currentEmployee = {
+                    employeeNumber: employee.Id, // Asume que 'Id' de la API corresponde a employeeNumber
+                    employeeName: employee.Name, // Asume que 'Name' de la API corresponde a employeeName
+                    department: employee.Role, // Asume que 'Role' de la API corresponde a department
+                    photo: employee.PhotoUrl // Asume que 'PhotoUrl' de la API corresponde a photo
+                };
+
+                employeeNameDisplay.textContent = currentEmployee.employeeName;
+                employeeIdDisplay.textContent = currentEmployee.employeeNumber;
+                employeeDepartmentDisplay.textContent = currentEmployee.department;
+
+                employeePhotoDisplay.src = currentEmployee.photo
+                    ? currentEmployee.photo
+                    : 'https://via.placeholder.com/150?text=' + currentEmployee.employeeName.charAt(0);
+
+                employeeInfo.classList.remove('hidden');
+                mealSelection.classList.remove('hidden');
+                errorMessage.classList.add('hidden');
+
+                searchHint.textContent = 'Empleado encontrado. Ahora selecciona el tipo de comida.';
+                document.getElementById('meal-type').focus();
+            } else {
+                // Si la API no devuelve un empleado válido
+                showError('Empleado no encontrado. Verifique el número de empleado.');
+                employeeInfo.classList.add('hidden');
+                mealSelection.classList.add('hidden');
+                currentEmployee = null;
+                searchHint.textContent = 'Intenta con otro número de empleado o registra al empleado primero.';
+            }
+        })
+        .catch(error => {
+            // Maneja cualquier error de la solicitud (ej. problemas de red, errores HTTP)
+            console.error('Error al buscar empleado:', error);
+            searchBtn.innerHTML = 'Buscar';
+            searchBtn.disabled = false;
+            showError('Hubo un error al buscar el empleado. Intente de nuevo más tarde.');
+            employeeInfo.classList.add('hidden');
+            mealSelection.classList.add('hidden');
+            currentEmployee = null;
+            searchHint.textContent = 'Intenta con otro número de empleado o registra al empleado primero.';
+        });
+}
 
             searchBtn.addEventListener('click', searchEmployee);
 
@@ -383,7 +410,6 @@
                     EmployeeId: currentEmployee.employeeNumber,
                     FoodType: mealType,
                     Amount: 1, // Asumiendo que cada consumo es de una unidad
-                    timestamp: new Date().toISOString()
                 };
 
                 try {
