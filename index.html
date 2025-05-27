@@ -233,7 +233,7 @@
 
             // Llenar la tabla con los datos
             tableBody.innerHTML = todayConsumptions.map(consumption => {
-                const date = new Date(consumption.fecha);
+                const date = new Date(consumption.Date);
                 const timeString = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
                 let mealTypeClass = '';
