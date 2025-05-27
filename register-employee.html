@@ -165,17 +165,6 @@
             
             <!-- Formulario de registro de empleado -->
             <form id="employee-form" class="p-6 space-y-6">
-                <!-- Campo: Número de Empleado -->
-                <div>
-                    <label for="employee-number" class="block mb-2 text-sm font-medium text-gray-300">
-                        Número de Empleado <span class="text-gold-400">*</span>
-                    </label>
-                    <input type="text" id="employee-number" 
-                        class="bg-dark-700 border border-dark-600 text-white text-sm rounded-lg focus:ring-gold-500 focus:border-gold-500 block w-full p-3 placeholder-gray-500" 
-                        placeholder="Ej. E12345" 
-                        required>
-                    <p class="mt-1 text-xs text-gray-500">Identificador único del empleado en el sistema</p>
-                </div>
                 
                 <!-- Campo: Nombre Completo -->
                 <div>
@@ -358,13 +347,12 @@
         // Manejar el envío del formulario
         employeeForm.addEventListener('submit', async function(event) {
             event.preventDefault();
-            
-            const employeeNumber = document.getElementById('employee-number').value.trim();
+
             const employeeName = document.getElementById('employee-name').value.trim();
             const department = document.getElementById('department').value;
-            
-            // Validar que no esté vacío el nombre y número (puedes agregar más validaciones)
-            if (!employeeName || !employeeNumber) {
+
+            // Validar que no esté vacío el nombre
+            if (!employeeName) {
                 alert('Por favor completa los campos requeridos.');
                 return;
             }
