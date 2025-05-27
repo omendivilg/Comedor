@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <!-- Metadatos básicos -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Comedor - Editar Foto de Empleado</title>
+    
+    <!-- CDN de Tailwind CSS para estilos -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- CDN de Flowbite para componentes UI -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/flowbite/2.2.0/flowbite.min.css" rel="stylesheet" />
+    
+    <!-- Configuración personalizada de Tailwind con colores elegantes -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        // Paleta de colores elegante y oscura
+                        dark: {
+                            "50": "#f8fafc",
+                            "100": "#f1f5f9",
+                            "200": "#e2e8f0",
+                            "300": "#cbd5e1",
+                            "400": "#94a3b8",
+                            "500": "#64748b",
+                            "600": "#475569",
+                            "700": "#334155",
+                            "800": "#1e293b",
+                            "900": "#0f172a",
+                            "950": "#020617"
+                        },
+                        gold: {
+                            "50": "#fefce8",
+                            "100": "#fef9c3",
+                            "200": "#fef08a",
+                            "300": "#fde047",
+                            "400": "#facc15",
+                            "500": "#eab308",
+                            "600": "#ca8a04",
+                            "700": "#a16207",
+                            "800": "#854d0e",
+                            "900": "#713f12",
+                            "950": "#422006"
+                        },
+                        emerald: {
+                            "50": "#ecfdf5",
+                            "100": "#d1fae5",
+                            "200": "#a7f3d0",
+                            "300": "#6ee7b7",
+                            "400": "#34d399",
+                            "500": "#10b981",
+                            "600": "#059669",
+                            "700": "#047857",
+                            "800": "#065f46",
+                            "900": "#064e3b",
+                            "950": "#022c22"
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- Estilos personalizados adicionales -->
+    <style>
+        /* Estilo para el scrollbar personalizado */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #1e293b;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: #475569;
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: #64748b;
+        }
+        
+        /* Transiciones suaves para elementos interactivos */
+        .transition-all {
+            transition: all 0.3s ease;
+        }
+
+        /* Estilos para los avatares */
+        .avatar {
+            width: 2.5rem;
+            height: 2.5rem;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #475569;
+            color: white;
+            font-weight: 600;
+        }
+
+        .avatar-large {
+            width: 10rem;
+            height: 10rem;
+        }
+
+        .avatar-xl {
+            width: 12rem;
+            height: 12rem;
+        }
+
+        .avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 50%;
+        }
+
+        /* Animación de carga */
+        .loading-spinner {
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #ffffff;
+            border-radius: 50%;
+            width: 16px;
+            height: 16px;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+            margin-right: 8px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Estilo para drag and drop */
+        .drag-over {
+            border-color: #ca8a04 !important;
+            background-color: rgba(202, 138, 4, 0.1) !important;
+        }
+
+        /* Área de drop para archivos */
+        .drop-zone {
+            border: 2px dashed #475569;
+            border-radius: 12px;
+            padding: 2rem;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .drop-zone:hover {
+            border-color: #ca8a04;
+            background-color: rgba(202, 138, 4, 0.05);
+        }
+    </style>
+</head>
+
+<!-- Cuerpo de la página con fondo oscuro elegante -->
+<body class="bg-dark-900 text-gray-100 min-h-screen">
+    <!-- Barra de navegación principal -->
+    <nav class="bg-dark-800 border-b border-dark-700 shadow-lg">
+        <div class="max-w-screen-xl flex flex-wrap items-center justify-between mx-auto p-4">
+            <!-- Logo y nombre de la aplicación -->
+            <a href="index.html" class="flex items-center space-x-3 rtl:space-x-reverse">
+                <span class="self-center text-2xl font-semibold whitespace-nowrap text-white">
+                    <span class="text-gold-400">Comedor</span> Empresarial
+                </span>
+            </a>
+            
+            <!-- Botón de menú para móviles -->
+            <button data-collapse-toggle="navbar-default" type="button" class="inline-flex items-center p-2 w-10 h-10 justify-center text-sm text-gray-400 rounded-lg md:hidden hover:bg-dark-700 focus:outline-none focus:ring-2 focus:ring-dark-600" aria-controls="navbar-default" aria-expanded="false">
+                <span class="sr-only">Abrir menú</span>
+                <svg class="w-5 h-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 17 14">
+                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M1 1h15M1 7h15M1 13h15"/>
+                </svg>
+            </button>
+            
+            <!-- Menú de navegación -->
+            <div class="hidden w-full md:block md:w-auto" id="navbar-default">
+                <ul class="font-medium flex flex-col p-4 md:p-0 mt-4 border border-dark-700 rounded-lg bg-dark-800 md:flex-row md:space-x-8 rtl:space-x-reverse md:mt-0 md:border-0 md:bg-dark-800">
+                    <li>
+                        <a href="index.html" class="block py-2 px-3 text-gray-300 rounded hover:bg-dark-700 md:hover:bg-transparent md:border-0 md:hover:text-gold-400 md:p-0 transition-all">Consumos Recientes</a>
+                    </li>
+                    <li>
+                        <a href="register-employee.html" class="block py-2 px-3 text-gray-300 rounded hover:bg-dark-700 md:hover:bg-transparent md:border-0 md:hover:text-gold-400 md:p-0 transition-all">Registrar Empleado</a>
+                    </li>
+                    <li>
+                        <a href="register-consumption.html" class="block py-2 px-3 text-gray-300 rounded hover:bg-dark-700 md:hover:bg-transparent md:border-0 md:hover:text-gold-400 md:p-0 transition-all">Registrar Consumo</a>
+                    </li>
+                    <!-- Elemento activo del menú -->
+                    <li>
+                        <a href="search-employee.html" class="block py-2 px-3 text-white bg-gold-600 rounded md:bg-transparent md:text-gold-400 md:p-0" aria-current="page">Editar</a>
+                    </li>
+                    <li>
+                        <a href="reports.html" class="block py-2 px-3 text-gray-300 rounded hover:bg-dark-700 md:hover:bg-transparent md:border-0 md:hover:text-gold-400 md:p-0 transition-all">Reportes</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Contenido principal -->
+    <div class="container mx-auto p-6">
+        <!-- Botón de regreso -->
+        <div class="mb-6">
+            <a href="search-employee.html" class="inline-flex items-center gap-2 text-gold-400 hover:text-gold-300 transition-all">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                </svg>
+                Volver a la búsqueda
+            </a>
+        </div>
+
+        <!-- Encabezado de la sección -->
+        <div class="mb-8">
+            <h1 class="text-3xl font-bold mb-2 text-white">Editar Foto de Empleado</h1>
+        </div>
+        
+
+        <!-- Panel de edición de foto -->
+        <div class="bg-dark-800 rounded-xl shadow-xl overflow-hidden border border-dark-700">
+            <!-- Encabezado de la tarjeta -->
+            <div class="p-6 border-b border-dark-700">
+                <h2 class="text-xl font-semibold text-white flex items-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                    </svg>
+                    Cambiar Foto de Perfil
+                </h2>
+                <p class="text-gray-400 text-sm mt-1">Sube una nueva imagen para actualizar la foto del empleado</p>
+            </div>
+            
+            <!-- Contenido de la tarjeta -->
+            <div class="p-6 space-y-8">
+                <!-- Comparación de fotos -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    </div>
+
+                    <!-- Nueva foto -->
+                    <div class="text-center">
+                        <h3 class="text-lg font-semibold text-white mb-4">Nueva Foto</h3>
+                        <div id="new-photo-preview" class="avatar avatar-xl mx-auto mb-4 border-2 border-dashed border-gray-600">
+                            <svg class="w-16 h-16 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                            </svg>
+                        </div>
+                        <p class="text-sm text-gray-400">Vista previa aparecerá aquí</p>
+                    </div>
+                </div>
+
+                <!-- Área de subida de archivos -->
+                <div class="space-y-6">
+                    <!-- Zona de arrastrar y soltar -->
+                    <div class="drop-zone" id="drop-zone">
+                        <svg class="w-12 h-12 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                        </svg>
+                        <h4 class="text-lg font-semibold text-white mb-2">Arrastra tu imagen aquí</h4>
+                        <p class="text-gray-400 mb-4">o haz clic para seleccionar un archivo</p>
+                        <input type="file" id="file-input" accept="image/*" class="hidden">
+                        <button 
+                            id="select-file-btn"
+                            class="px-6 py-2 bg-gold-600 hover:bg-gold-700 text-white rounded-lg transition-all font-medium"
+                        >
+                            Seleccionar Archivo
+                        </button>
+                    </div>
+
+                    <!-- Información de requisitos -->
+                    <div class="bg-dark-700 rounded-lg p-4">
+                        <h4 class="font-semibold text-white mb-2">Requisitos de la imagen:</h4>
+                        <ul class="text-sm text-gray-400 space-y-1">
+                            <li>• Formatos aceptados: JPG, PNG, WebP</li>
+                            <li>• Tamaño máximo: 2MB</li>
+                            <li>• Resolución recomendada: 400x400 píxeles o superior</li>
+                            <li>• La imagen debe ser cuadrada para mejores resultados</li>
+                        </ul>
+                    </div>
+
+                    <!-- Botones de acción -->
+                    <div class="flex gap-4 pt-4" id="action-buttons" style="display: none;">
+                        <button 
+                            id="save-photo-btn"
+                            class="flex-1 py-3 px-6 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition-all flex items-center justify-center gap-2 font-medium"
+                        >
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path>
+                            </svg>
+                            Guardar Cambios
+                        </button>
+
+                        <button 
+                            id="cancel-btn"
+                            class="py-3 px-6 bg-dark-700 border border-dark-600 text-white rounded-lg hover:bg-dark-600 transition-all flex items-center justify-center gap-2 font-medium"
+                        >
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                            Cancelar
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Información adicional -->
+        <div class="mt-6 bg-dark-800 rounded-xl shadow-xl overflow-hidden border border-dark-700">
+            <div class="p-4">
+                <p class="text-sm text-gray-400">
+                    <strong>Nota:</strong> Una vez guardada, la nueva foto se aplicará inmediatamente en todo el sistema. Asegúrate de que la imagen sea apropiada y cumpla con las políticas de la empresa.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Flowbite JS para funcionalidad de componentes UI -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/flowbite/2.2.0/flowbite.min.js"></script>
+</body>
+</html>

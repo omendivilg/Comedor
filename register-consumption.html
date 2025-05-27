@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <!-- Metadatos básicos -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Comedor - Registrar Consumo</title>
+    
+    <!-- CDN de Tailwind CSS para estilos -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- CDN de Flowbite para componentes UI -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/flowbite/2.2.0/flowbite.min.css" rel="stylesheet" />
+    
+    <!-- Configuración personalizada de Tailwind con colores elegantes -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        // Paleta de colores elegante y oscura
+                        dark: {
+                            "50": "#f8fafc",
+                            "100": "#f1f5f9",
+                            "200": "#e2e8f0",
+                            "300": "#cbd5e1",
+                            "400": "#94a3b8",
+                            "500": "#64748b",
+                            "600": "#475569",
+                            "700": "#334155",
+                            "800": "#1e293b",
+                            "900": "#0f172a",
+                            "950": "#020617"
+                        },
+                        gold: {
+                            "50": "#fefce8",
+                            "100": "#fef9c3",
+                            "200": "#fef08a",
+                            "300": "#fde047",
+                            "400": "#facc15",
+                            "500": "#eab308",
+                            "600": "#ca8a04",
+                            "700": "#a16207",
+                            "800": "#854d0e",
+                            "900": "#713f12",
+                            "950": "#422006"
+                        },
+                        emerald: {
+                            "50": "#ecfdf5",
+                            "100": "#d1fae5",
+                            "200": "#a7f3d0",
+                            "300": "#6ee7b7",
+                            "400": "#34d399",
+                            "500": "#10b981",
+                            "600": "#059669",
+                            "700": "#047857",
+                            "800": "#065f46",
+                            "900": "#064e3b",
+                            "950": "#022c22"
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- Estilos personalizados adicionales -->
+    <style>
+        /* Estilo para el scrollbar personalizado */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #1e293b;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: #475569;
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: #64748b;
+        }
+        
+        /* Transiciones suaves para elementos interactivos */
+        .transition-all {
+            transition: all 0.3s ease;
+        }
+        
+        /* Animación de pulso para el botón de búsqueda */
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.7;
+            }
+        }
+        
+        .animate-pulse-slow {
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+    </style>
+</head>
+
+<!-- Cuerpo de la página con fondo oscuro elegante -->
+<body class="bg-dark-900 text-gray-100 min-h-screen">
+    <!-- Barra de navegación principal -->
+    <nav class="bg-dark-800 border-b border-dark-700 shadow-lg">
+        <div class="max-w-screen-xl flex flex-wrap items-center justify-between mx-auto p-4">
+            <!-- Logo y nombre de la aplicación -->
+            <a href="index.html" class="flex items-center space-x-3 rtl:space-x-reverse">
+                <span class="self-center text-2xl font-semibold whitespace-nowrap text-white">
+                    <span class="text-gold-400">Comedor</span> Empresarial
+                </span>
+            </a>
+            
+            <!-- Botón de menú para móviles -->
+            <button data-collapse-toggle="navbar-default" type="button" class="inline-flex items-center p-2 w-10 h-10 justify-center text-sm text-gray-400 rounded-lg md:hidden hover:bg-dark-700 focus:outline-none focus:ring-2 focus:ring-dark-600" aria-controls="navbar-default" aria-expanded="false">
+                <span class="sr-only">Abrir menú</span>
+                <svg class="w-5 h-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 17 14">
+                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M1 1h15M1 7h15M1 13h15"/>
+                </svg>
+            </button>
+            
+            <!-- Menú de navegación -->
+            <div class="hidden w-full md:block md:w-auto" id="navbar-default">
+                <ul class="font-medium flex flex-col p-4 md:p-0 mt-4 border border-dark-700 rounded-lg bg-dark-800 md:flex-row md:space-x-8 rtl:space-x-reverse md:mt-0 md:border-0 md:bg-dark-800">
+                    <li>
+                        <a href="index.html" class="block py-2 px-3 text-gray-300 rounded hover:bg-dark-700 md:hover:bg-transparent md:border-0 md:hover:text-gold-400 md:p-0 transition-all">Consumos Recientes</a>
+                    </li>
+                    <li>
+                        <a href="register-employee.html" class="block py-2 px-3 text-gray-300 rounded hover:bg-dark-700 md:hover:bg-transparent md:border-0 md:hover:text-gold-400 md:p-0 transition-all">Registrar Empleado</a>
+                    </li>
+                    <!-- Elemento activo del menú -->
+                    <li>
+                        <a href="register-consumption.html" class="block py-2 px-3 text-white bg-gold-600 rounded md:bg-transparent md:text-gold-400 md:p-0" aria-current="page">Registrar Consumo</a>
+                    </li>
+                    <li>
+                        <a href="search-employee.html" class="block py-2 px-3 text-white bg-gold-600 rounded md:bg-transparent md:text-gold-400 md:p-0">Editar</a>
+                    </li>
+                    <li>
+                        <a href="reports.html" class="block py-2 px-3 text-gray-300 rounded hover:bg-dark-700 md:hover:bg-transparent md:border-0 md:hover:text-gold-400 md:p-0 transition-all">Reportes</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Contenido principal -->
+    <div class="container mx-auto p-6">
+        <!-- Encabezado de la sección -->
+        <div class="mb-8">
+            <h1 class="text-3xl font-bold mb-2 text-white">Registrar Consumo</h1>
+            <p class="text-gray-400">Registra el consumo de alimentos de un empleado</p>
+        </div>
+        
+        <!-- Tarjeta del formulario de registro de consumo -->
+        <div class="max-w-2xl mx-auto bg-dark-800 rounded-xl shadow-xl overflow-hidden border border-dark-700">
+            <!-- Encabezado de la tarjeta -->
+            <div class="p-6 border-b border-dark-700">
+                <h2 class="text-xl font-semibold text-white">Registro de Consumo</h2>
+                <p class="text-gray-400 text-sm mt-1">Busca al empleado por su número y registra su consumo</p>
+            </div>
+            
+            <!-- Formulario de registro de consumo -->
+            <form id="consumption-form" class="p-6 space-y-6">
+                <!-- Campo: Búsqueda de empleado por número -->
+                <div>
+                    <label for="employee-number-search" class="block mb-2 text-sm font-medium text-gray-300">
+                        Número de Empleado <span class="text-gold-400">*</span>
+                    </label>
+                    <div class="flex">
+                        <input type="text" id="employee-number-search" 
+                            class="bg-dark-700 border border-dark-600 text-white text-sm rounded-lg focus:ring-gold-500 focus:border-gold-500 block w-full p-3 placeholder-gray-500" 
+                            placeholder="Ej. E12345" 
+                            required>
+                        <button type="button" id="search-employee-btn" 
+                            class="ml-2 text-white bg-gold-600 hover:bg-gold-700 focus:ring-4 focus:outline-none focus:ring-gold-800 font-medium rounded-lg text-sm px-5 py-3 text-center transition-all">
+                            <span>Buscar</span>
+                        </button>
+                    </div>
+                    <p class="mt-1 text-xs text-gray-500" id="search-hint">Ingresa el número de empleado para buscarlo en el sistema</p>
+                </div>
+                
+                <!-- Información del empleado (inicialmente oculta) -->
+                <div id="employee-info" >
+                    <div class="flex items-center space-x-4 p-5 bg-dark-700 rounded-lg border border-dark-600">
+                        <!-- Foto del empleado -->
+                        <div id="employee-photo-container" class="flex-shrink-0">
+                            <img id="employee-photo-display" class="w-20 h-20 rounded-full object-cover border-2 border-gold-600" src="/placeholder.svg" alt="Foto del empleado">
+                        </div>
+                        <!-- Datos del empleado -->
+                        <div class="flex-1 min-w-0">
+                            <p class="text-lg font-medium text-white truncate">
+                                <span id="employee-name-display">Nombre del empleado</span>
+                            </p>
+                            <div class="flex items-center mt-1">
+                                <span class="bg-dark-600 text-gray-300 text-xs font-medium px-2.5 py-0.5 rounded-full mr-2">
+                                    <span id="employee-id-display">ID</span>
+                                </span>
+                                <span class="bg-gold-900 text-gold-300 text-xs font-medium px-2.5 py-0.5 rounded-full">
+                                    <span id="employee-department-display">Departamento</span>
+                                </span>
+                            </div>
+                        </div>
+                        <!-- Indicador de empleado encontrado -->
+                        <div class="flex-shrink-0">
+                            <span class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-emerald-900 text-emerald-300">
+                                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                                </svg>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Selección de tipo de comida (inicialmente oculta) -->
+                <div id="meal-selection" class="space-y-6">
+                    <div>
+                        <label for="meal-type" class="block mb-2 text-sm font-medium text-gray-300">
+                            Tipo de Comida <span class="text-gold-400">*</span>
+                        </label>
+                        <select id="meal-type" 
+                            class="bg-dark-700 border border-dark-600 text-white text-sm rounded-lg focus:ring-gold-500 focus:border-gold-500 block w-full p-3" 
+                            required>
+                            <option value="" selected disabled>Seleccionar tipo de comida</option>
+                            <option value="Desayuno">Desayuno</option>
+                            <option value="Comida">Comida</option>
+                            <option value="Cena">Cena</option>
+                            <option value="Snack">Snack</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Botón para registrar el consumo -->
+                    <button type="submit" id="register-consumption-btn" 
+                        class="w-full text-white bg-emerald-600 hover:bg-emerald-700 focus:ring-4 focus:outline-none focus:ring-emerald-800 font-medium rounded-lg text-sm px-5 py-3 text-center transition-all">
+                        Registrar Consumo
+                    </button>
+                </div>
+                
+                <!-- Mensaje de error (inicialmente oculto) -->
+                <div id="error-message" class="hidden p-4 mb-4 text-sm rounded-lg bg-red-900 text-red-300" role="alert">
+                    <div class="flex items-center">
+                        <svg class="w-5 h-5 mr-2 text-red-300" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
+                        </svg>
+                        <span class="font-medium mr-1">Error:</span> 
+                        <span id="error-text">Empleado no encontrado.</span>
+                    </div>
+                </div>
+                
+                <!-- Mensaje de éxito (inicialmente oculto) -->
+                <div id="success-message" class="hidden p-4 mb-4 text-sm rounded-lg bg-emerald-900 text-emerald-300" role="alert">
+                    <div class="flex items-center">
+                        <svg class="w-5 h-5 mr-2 text-emerald-300" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                        </svg>
+                        <span class="font-medium mr-1">Éxito:</span>
+                        <span id="success-text">Consumo registrado correctamente.</span>
+                    </div>
+                </div>
+            </form>
+            
+            <!-- Pie de la tarjeta con información adicional -->
+            <div class="p-4 bg-dark-800 border-t border-dark-700 text-sm text-gray-400">
+                <p>Para registrar un consumo, primero debes buscar al empleado por su número.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Flowbite JS para funcionalidad de componentes UI -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/flowbite/2.2.0/flowbite.min.js"></script>
+</body>
+</html>
