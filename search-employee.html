@@ -501,7 +501,10 @@
     // ---
     // Función para guardar la foto (¡Ahora envía la foto a tu API real!)
     async function savePhoto() {
-        if (!selectedEmployee || !newPhotoFile || !newPhotoUrl) return;
+        if (!selectedEmployee || !newPhotoFile || !newPhotoUrl) {
+            alert('Por favor selecciona un empleado y una nueva foto.');
+            return;
+        }
 
         savePhotoBtn.innerHTML = `
             <div class="loading-spinner"></div>
@@ -511,9 +514,11 @@
         cancelBtn.disabled = true;
 
         try {
-            // Realizamos la llamada real a tu endpoint
-            const response = await fetch(`https://jnhnlieyq9.execute-api.us-east-2.amazonaws.com/default/api/employees/${selectedEmployee.id}/photo`, {
-                method: 'POST', // Tu endpoint usa POST
+            // Construimos la URL del endpoint dinámicamente con el employeeId
+            const endpointUrl = `https://jnhnlieyq9.execute-api.us-east-2.amazonaws.com/default/api/employees/${selectedEmployee.id}/photo`;
+
+            const response = await fetch(endpointUrl, {
+                method: 'PUT', // Cambiado a PUT, asumiendo que es para actualizar
                 headers: {
                     'Content-Type': 'application/json' // Indicamos que el cuerpo es JSON
                 },
@@ -521,19 +526,16 @@
             });
 
             if (!response.ok) {
-                // Si la respuesta no es exitosa, intentamos leer el mensaje de error de la API
                 const errorData = await response.json();
                 throw new Error(`Error al subir la foto: ${errorData.error || response.statusText}`);
             }
 
-            // Si todo fue bien, la API probablemente devuelve un mensaje de éxito.
             const result = await response.json();
-            console.log(result.message); // "Foto actualizada"
+            console.log(result.message); // "Foto actualizada correctamente"
 
             // Actualizar la foto del empleado en la lista local 'employees'
             const employeeIndex = employees.findIndex(emp => emp.id === selectedEmployee.id);
             if (employeeIndex !== -1) {
-                // Asumimos que la API usa la URL que le enviamos o la guarda y la URL sigue siendo válida.
                 employees[employeeIndex].photo = newPhotoUrl; 
                 selectedEmployee.photo = newPhotoUrl; // Actualiza también el objeto selectedEmployee
                 currentPhoto.innerHTML = `<img src="${newPhotoUrl}" alt="${selectedEmployee.name}">`;
