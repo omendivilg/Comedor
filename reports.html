@@ -162,7 +162,7 @@
         
         <!-- Selector de tipo de reporte y período -->
         <div class="max-w-2xl mx-auto mb-8 space-y-4">
-            <!-- Selector de tipo de reporte -->
+         
             <div class="bg-dark-800 rounded-xl shadow-lg overflow-hidden border border-dark-700">
                 <div class="p-5">
                     <label for="report-type" class="block mb-2 text-sm font-medium text-gray-300">Tipo de Reporte</label>
@@ -172,20 +172,25 @@
                     </select>
                     <p class="mt-2 text-xs text-gray-500">Selecciona el tipo de reporte que deseas generar</p>
                 </div>
-            </div>
-            
-            <!-- Selector de período -->
-            <div class="bg-dark-800 rounded-xl shadow-lg overflow-hidden border border-dark-700">
                 <div class="p-5">
                     <label for="period-select" class="block mb-2 text-sm font-medium text-gray-300">Seleccionar Período</label>
                     <select id="period-select" class="bg-dark-700 border border-dark-600 text-white text-sm rounded-lg focus:ring-gold-500 focus:border-gold-500 block w-full p-3">
                         <option value="" disabled selected>Selecciona un período...</option>
                     </select>
                     <p class="mt-2 text-xs text-gray-500" id="period-help-text">Selecciona un mes para ver los reportes correspondientes</p>
+                    
+                    <button type="retrieve" 
+                      class="mt-4 w-full text-white bg-gold-600 hover:bg-gold-700 focus:ring-4 focus:outline-none focus:ring-gold-800 font-medium rounded-lg text-sm px-5 py-3 text-center transition-all">
+                        Generar Reporte
+                    </button>
+
                 </div>
+                
             </div>
+            
+
         </div>
-        
+
         <!-- Tarjetas de resumen -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
             <!-- Tarjeta: Total de Consumos -->
@@ -323,139 +328,71 @@
     </div>
 
     <!-- Script para manejar los reportes -->
-    <script>
-        document.addEventListener('DOMContentLoaded', async function() {
-            // Referencias a elementos del DOM
-            const monthSelect = document.getElementById('month-select');
-            const totalConsumptionsEl = document.getElementById('total-consumptions');
-            const totalEmployeesEl = document.getElementById('total-employees');
-            const popularMealEl = document.getElementById('popular-meal');
-            const consumptionTableBody = document.getElementById('consumption-table-body');
-            const tableInfo = document.getElementById('table-info');
-            const exportCsvBtn = document.getElementById('export-csv');
-            const printReportBtn = document.getElementById('print-report');
-            
-            // Variables para los gráficos
-            let mealTypeChart;
-            let dailyChart;
-            
-            // Configuración de colores para los gráficos
-            const chartColors = {
-                backgroundColor: [
-                    'rgba(16, 185, 129, 0.7)',  // Emerald
-                    'rgba(234, 179, 8, 0.7)',   // Gold
-                    'rgba(59, 130, 246, 0.7)',  // Blue
-                    'rgba(139, 92, 246, 0.7)'   // Purple
-                ],
-                borderColor: [
-                    'rgba(16, 185, 129, 1)',
-                    'rgba(234, 179, 8, 1)',
-                    'rgba(59, 130, 246, 1)',
-                    'rgba(139, 92, 246, 1)'
-                ]
-            };
-            
-            // Configuración global de Chart.js para tema oscuro
-            Chart.defaults.color = '#94a3b8';
-            Chart.defaults.borderColor = '#334155';
-            
-               try {
-        const response = await fetch('https://jnhnlieyq9.execute-api.us-east-2.amazonaws.com/default/api/consumptions/detailed');
-        const consumptions = await response.json();
-            
-            // Si no hay consumos, mostrar mensaje
-            if (consumptions.length === 0) {
-                // Actualizar tabla
-                consumptionTableBody.innerHTML = `
-                    <tr class="bg-dark-800 border-b border-dark-700">
-                        <td colspan="4" class="px-6 py-10 text-center">
-                            <div class="flex flex-col items-center text-gray-500">
-                                <svg class="w-12 h-12 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                </svg>
-                                <p class="text-lg font-medium">No hay consumos registrados</p>
-                                <p class="mt-1">Registra consumos para generar reportes</p>
-                            </div>
-                        </td>
-                    </tr>
-                `;
-                
-                // Actualizar selector de meses
-                monthSelect.innerHTML = `
-                    <option value="" disabled selected>No hay datos disponibles</option>
-                `;
-                
-                // Actualizar información de la tabla
-                tableInfo.textContent = "No hay datos de consumo disponibles.";
-                
-                // Deshabilitar botones de exportación
-                exportCsvBtn.disabled = true;
-                exportCsvBtn.classList.add('opacity-50', 'cursor-not-allowed');
-                printReportBtn.disabled = true;
-                printReportBtn.classList.add('opacity-50', 'cursor-not-allowed');
-                
-                return;
-            }
-            
-            // Llenar selector de meses
-            const months = {};
-            consumptions.forEach(consumption => {
-                const date = new Date(consumption.ConsumptionDate);
-                const monthYear = `${date.getFullYear()}-${date.getMonth() + 1}`;
-                const monthName = date.toLocaleString('default', { month: 'long', year: 'numeric' });
-                months[monthYear] = monthName;
-            });
-            
-            // Ordenar meses (más reciente primero)
-            const sortedMonths = Object.keys(months).sort().reverse();
-            
-            // Actualizar selector de meses
-            monthSelect.innerHTML = '';
-            sortedMonths.forEach(monthKey => {
-                const option = document.createElement('option');
-                option.value = monthKey;
-                option.textContent = months[monthKey];
-                monthSelect.appendChild(option);
-            });
-            
-            // Función para actualizar los reportes
-            function updateReports() {
-                const selectedMonth = monthSelect.value;
-                const [year, month] = selectedMonth.split('-').map(Number);
-                
-                // Filtrar consumos del mes seleccionado
-                const monthConsumptions = consumptions.filter(consumption => {
-                    const date = new Date(consumption.ConsumptionDate);
-                    return date.getFullYear() === year && date.getMonth() + 1 === month;
-                });
-                
-                // Actualizar tarjetas de resumen
-                totalConsumptionsEl.textContent = monthConsumptions.length;
-                
-                // Contar empleados únicos
-                const uniqueEmployees = new Set(monthConsumptions.map(c => c.EmployeeId)).size;
-                totalEmployeesEl.textContent = uniqueEmployees;
-                
-                // Encontrar tipo de comida más popular
-                const mealTypeCounts = {};
-                monthConsumptions.forEach(consumption => {
-                    mealTypeCounts[consumption.FoodType] = (mealTypeCounts[consumption.FoodType] || 0) + 1;
-                });
-                
-                let popularMeal = '-';
-                let maxCount = 0;
-                
-                for (const [meal, count] of Object.entries(mealTypeCounts)) {
-                    if (count > maxCount) {
-                        maxCount = count;
-                        popularMeal = meal;
-                    }
+  <script>
+    document.addEventListener('DOMContentLoaded', async function() {
+        // Referencias a elementos del DOM
+        const monthSelect = document.getElementById('month-select');
+        const totalConsumptionsEl = document.getElementById('total-consumptions');
+        const totalEmployeesEl = document.getElementById('total-employees');
+        const popularMealEl = document.getElementById('popular-meal');
+        const consumptionTableBody = document.getElementById('consumption-table-body');
+        const tableInfo = document.getElementById('table-info');
+        const exportCsvBtn = document.getElementById('export-csv');
+        const printReportBtn = document.getElementById('print-report');
+
+        // Obtener una referencia al botón "Generar Reporte" por su ID
+        const retrieveReportButton = document.getElementById('retrieveReportBtn'); // Asegúrate de que este ID coincida con tu HTML
+
+        // Variables para los gráficos
+        let mealTypeChart;
+        let dailyChart;
+        let allConsumptions = []; // Variable para almacenar todos los consumos una vez cargados
+
+        // Configuración de colores para los gráficos
+        const chartColors = {
+            backgroundColor: [
+                'rgba(16, 185, 129, 0.7)',  // Emerald
+                'rgba(234, 179, 8, 0.7)',   // Gold
+                'rgba(59, 130, 246, 0.7)',  // Blue
+                'rgba(139, 92, 246, 0.7)'  // Purple
+            ],
+            borderColor: [
+                'rgba(16, 185, 129, 1)',
+                'rgba(234, 179, 8, 1)',
+                'rgba(59, 130, 246, 1)',
+                'rgba(139, 92, 246, 1)'
+            ]
+        };
+
+        // Configuración global de Chart.js para tema oscuro
+        Chart.defaults.color = '#94a3b8';
+        Chart.defaults.borderColor = '#334155';
+
+        // Objeto para almacenar nombres de meses (para impresión y mensajes)
+        const monthsNames = {};
+
+        // Función para cargar los datos de la API y mostrar el reporte inicial
+        async function loadAndDisplayReport() {
+            try {
+                // Deshabilitar el botón mientras se carga
+                retrieveReportButton.disabled = true;
+                retrieveReportButton.classList.add('opacity-50', 'cursor-not-allowed');
+                // Mostrar un mensaje de carga (opcional, puedes agregar un spinner en el HTML)
+                tableInfo.textContent = "Cargando datos...";
+
+                const response = await fetch('https://jnhnlieyq9.execute-api.us-east-2.amazonaws.com/default/api/consumptions/detailed');
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
                 }
-                
-                popularMealEl.textContent = popularMeal;
-                
-                // Actualizar tabla
-                if (monthConsumptions.length === 0) {
+                allConsumptions = await response.json(); // Almacenar los consumos en la variable global
+
+                // Habilitar el botón después de la carga
+                retrieveReportButton.disabled = false;
+                retrieveReportButton.classList.remove('opacity-50', 'cursor-not-allowed');
+
+                // Si no hay consumos, mostrar mensaje
+                if (allConsumptions.length === 0) {
+                    // Actualizar tabla
                     consumptionTableBody.innerHTML = `
                         <tr class="bg-dark-800 border-b border-dark-700">
                             <td colspan="4" class="px-6 py-10 text-center">
@@ -463,399 +400,579 @@
                                     <svg class="w-12 h-12 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                                     </svg>
-                                    <p class="text-lg font-medium">No hay consumos en este período</p>
-                                    <p class="mt-1">Selecciona otro período o registra nuevos consumos</p>
+                                    <p class="text-lg font-medium">No hay consumos registrados</p>
+                                    <p class="mt-1">Registra consumos para generar reportes</p>
                                 </div>
                             </td>
                         </tr>
                     `;
+
+                    // Actualizar selector de meses
+                    monthSelect.innerHTML = `<option value="" disabled selected>No hay datos disponibles</option>`;
+                    monthSelect.disabled = true; // Deshabilitar el selector si no hay datos
                     
-                    tableInfo.textContent = `No hay consumos registrados en ${months[selectedMonth]}.`;
-                } else {
-                    // Ordenar por fecha (más reciente primero)
-                    monthConsumptions.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-                    
-                    consumptionTableBody.innerHTML = monthConsumptions.map(consumption => {
-                        const date = new Date(consumption.ConsumptionDate);
-                        const dateString = date.toLocaleDateString();
-                        const timeString = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                        
-                        // Determinar el color del tipo de comida
-                        let mealTypeClass = '';
-                        switch(consumption.FoodType.toLowerCase()) {
-                            case 'desayuno':
-                                mealTypeClass = 'text-emerald-400';
-                                break;
-                            case 'comida':
-                                mealTypeClass = 'text-gold-400';
-                                break;
-                            case 'cena':
-                                mealTypeClass = 'text-blue-400';
-                                break;
-                            case 'snack':
-                                mealTypeClass = 'text-purple-400';
-                                break;
-                            default:
-                                mealTypeClass = 'text-gray-400';
-                        }
-                        
-                        return `
-                            <tr class="bg-dark-800 border-b border-dark-700 hover:bg-dark-700 transition-all">
-                                <td class="px-6 py-4">${dateString} ${timeString}</td>
-                                <td class="px-6 py-4 font-medium text-white">${consumption.EmployeeName}</td>
-                                <td class="px-6 py-4">${consumption.EmployeeId}</td>
-                                <td class="px-6 py-4 ${mealTypeClass} font-medium">${consumption.FoodType}</td>
-                            </tr>
-                        `;
-                    }).join('');
-                    
-                    tableInfo.textContent = `Mostrando ${monthConsumptions.length} consumos de ${months[selectedMonth]}.`;
+                    // Actualizar información de la tabla
+                    tableInfo.textContent = "No hay datos de consumo disponibles.";
+
+                    // Deshabilitar botones de exportación
+                    exportCsvBtn.disabled = true;
+                    exportCsvBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                    printReportBtn.disabled = true;
+                    printReportBtn.classList.add('opacity-50', 'cursor-not-allowed');
+
+                    // Destruir gráficos si existen
+                    if (mealTypeChart) mealTypeChart.destroy();
+                    if (dailyChart) dailyChart.destroy();
+
+                    // Limpiar tarjetas de resumen
+                    totalConsumptionsEl.textContent = '0';
+                    totalEmployeesEl.textContent = '0';
+                    popularMealEl.textContent = '-';
+
+                    return;
                 }
+
+                // Habilitar el selector de meses
+                monthSelect.disabled = false;
+
+                // Llenar selector de meses
+                Object.keys(monthsNames).forEach(key => delete monthsNames[key]); // Limpiar el objeto de meses
+                allConsumptions.forEach(consumption => {
+                    const date = new Date(consumption.ConsumptionDate);
+                    const monthYear = `${date.getFullYear()}-${date.getMonth() + 1}`;
+                    // Establecer el locale 'es-MX' para formatear el nombre del mes
+                    const monthName = date.toLocaleString('es-MX', { month: 'long', year: 'numeric' }); 
+                    // Capitalizar la primera letra del mes
+                    monthsNames[monthYear] = monthName.charAt(0).toUpperCase() + monthName.slice(1);
+                });
+
+                // Ordenar meses (más reciente primero)
+                const sortedMonths = Object.keys(monthsNames).sort().reverse();
+
+                // Actualizar selector de meses
+                monthSelect.innerHTML = '';
+                sortedMonths.forEach(monthKey => {
+                    const option = document.createElement('option');
+                    option.value = monthKey;
+                    option.textContent = monthsNames[monthKey];
+                    monthSelect.appendChild(option);
+                });
+
+                // Habilitar botones de exportación
+                exportCsvBtn.disabled = false;
+                exportCsvBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                printReportBtn.disabled = false;
+                printReportBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+
+                // Seleccionar el mes más reciente por defecto
+                monthSelect.value = sortedMonths[0];
+                updateReports(); // Llamar para mostrar el reporte del mes más reciente
+            } catch (error) {
+                console.error('Error al cargar consumos:', error);
+                // Habilitar el botón incluso si hay un error para permitir reintentar
+                retrieveReportButton.disabled = false;
+                retrieveReportButton.classList.remove('opacity-50', 'cursor-not-allowed');
                 
-                // Actualizar gráfico de tipos de comida
-                const mealTypeLabels = Object.keys(mealTypeCounts);
-                const mealTypeData = Object.values(mealTypeCounts);
-                
-                if (mealTypeChart) {
-                    mealTypeChart.destroy();
+                consumptionTableBody.innerHTML = `
+                    <tr class="bg-dark-800 border-b border-dark-700">
+                        <td colspan="4" class="px-6 py-10 text-center text-red-500">
+                            <p>Error al cargar los datos de consumo. Por favor, inténtalo más tarde o verifica la conexión.</p>
+                            <p>Detalle: ${error.message}</p>
+                        </td>
+                    </tr>
+                `;
+                monthSelect.innerHTML = `<option value="" disabled selected>Error al cargar datos</option>`;
+                monthSelect.disabled = true;
+                tableInfo.textContent = "Error al cargar datos de consumo.";
+                exportCsvBtn.disabled = true;
+                exportCsvBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                printReportBtn.disabled = true;
+                printReportBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                if (mealTypeChart) mealTypeChart.destroy();
+                if (dailyChart) dailyChart.destroy();
+                // Limpiar tarjetas de resumen
+                totalConsumptionsEl.textContent = '0';
+                totalEmployeesEl.textContent = '0';
+                popularMealEl.textContent = '-';
+            }
+        }
+
+        // Función para actualizar los reportes basándose en el mes seleccionado
+        function updateReports() {
+            const selectedMonth = monthSelect.value;
+            if (!selectedMonth || allConsumptions.length === 0) {
+                // Si no hay mes seleccionado o no hay consumos cargados, limpia los reportes
+                totalConsumptionsEl.textContent = '0';
+                totalEmployeesEl.textContent = '0';
+                popularMealEl.textContent = '-';
+                consumptionTableBody.innerHTML = `
+                    <tr class="bg-dark-800 border-b border-dark-700">
+                        <td colspan="4" class="px-6 py-10 text-center">
+                            <div class="flex flex-col items-center text-gray-500">
+                                <svg class="w-12 h-12 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                                <p class="text-lg font-medium">Selecciona un mes para ver el reporte</p>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+                tableInfo.textContent = "Haz clic en 'Generar Reporte' para cargar los datos.";
+                if (mealTypeChart) mealTypeChart.destroy();
+                if (dailyChart) dailyChart.destroy();
+                exportCsvBtn.disabled = true;
+                exportCsvBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                printReportBtn.disabled = true;
+                printReportBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                return;
+            }
+
+            const [year, month] = selectedMonth.split('-').map(Number);
+
+            // Filtrar consumos del mes seleccionado de los datos globales
+            const monthConsumptions = allConsumptions.filter(consumption => {
+                const date = new Date(consumption.ConsumptionDate);
+                return date.getFullYear() === year && date.getMonth() + 1 === month;
+            });
+
+            // Actualizar tarjetas de resumen
+            totalConsumptionsEl.textContent = monthConsumptions.length;
+
+            // Contar empleados únicos
+            const uniqueEmployees = new Set(monthConsumptions.map(c => c.EmployeeId)).size;
+            totalEmployeesEl.textContent = uniqueEmployees;
+
+            // Encontrar tipo de comida más popular
+            const mealTypeCounts = {};
+            monthConsumptions.forEach(consumption => {
+                mealTypeCounts[consumption.FoodType] = (mealTypeCounts[consumption.FoodType] || 0) + 1;
+            });
+
+            let popularMeal = '-';
+            let maxCount = 0;
+
+            for (const [meal, count] of Object.entries(mealTypeCounts)) {
+                if (count > maxCount) {
+                    maxCount = count;
+                    popularMeal = meal;
                 }
-                
-                const mealTypeCtx = document.getElementById('meal-type-chart').getContext('2d');
-                mealTypeChart = new Chart(mealTypeCtx, {
-                    type: 'pie',
-                    data: {
-                        labels: mealTypeLabels,
-                        datasets: [{
-                            data: mealTypeData,
-                            backgroundColor: chartColors.backgroundColor,
-                            borderColor: chartColors.borderColor,
-                            borderWidth: 1
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: {
-                                position: 'bottom',
-                                labels: {
-                                    padding: 20,
-                                    usePointStyle: true,
-                                    pointStyle: 'circle'
-                                }
-                            },
-                            tooltip: {
-                                backgroundColor: '#1e293b',
-                                titleColor: '#ffffff',
-                                bodyColor: '#e2e8f0',
-                                borderColor: '#334155',
-                                borderWidth: 1,
-                                padding: 12,
-                                displayColors: true,
-                                usePointStyle: true
-                            }
-                        }
+            }
+
+            popularMealEl.textContent = popularMeal;
+
+            // Actualizar tabla
+            if (monthConsumptions.length === 0) {
+                consumptionTableBody.innerHTML = `
+                    <tr class="bg-dark-800 border-b border-dark-700">
+                        <td colspan="4" class="px-6 py-10 text-center">
+                            <div class="flex flex-col items-center text-gray-500">
+                                <svg class="w-12 h-12 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                                <p class="text-lg font-medium">No hay consumos en este período</p>
+                                <p class="mt-1">Selecciona otro período o registra nuevos consumos</p>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+
+                tableInfo.textContent = `No hay consumos registrados en ${monthsNames[selectedMonth]}.`;
+                exportCsvBtn.disabled = true;
+                exportCsvBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                printReportBtn.disabled = true;
+                printReportBtn.classList.add('opacity-50', 'cursor-not-allowed');
+
+            } else {
+                // Ordenar por fecha (más reciente primero)
+                monthConsumptions.sort((a, b) => new Date(b.ConsumptionDate) - new Date(a.ConsumptionDate));
+
+                consumptionTableBody.innerHTML = monthConsumptions.map(consumption => {
+                    const date = new Date(consumption.ConsumptionDate);
+                    // Formato de fecha y hora localizado para la tabla
+                    const dateString = date.toLocaleDateString('es-MX');
+                    const timeString = date.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' });
+
+                    // Determinar el color del tipo de comida
+                    let mealTypeClass = '';
+                    switch(consumption.FoodType.toLowerCase()) {
+                        case 'desayuno':
+                            mealTypeClass = 'text-emerald-400';
+                            break;
+                        case 'comida':
+                            mealTypeClass = 'text-gold-400';
+                            break;
+                        case 'cena':
+                            mealTypeClass = 'text-blue-400';
+                            break;
+                        case 'snack':
+                            mealTypeClass = 'text-purple-400';
+                            break;
+                        default:
+                            mealTypeClass = 'text-gray-400';
                     }
-                });
-                
-                // Actualizar gráfico de consumos diarios
-                const dailyCounts = {};
-                
-                monthConsumptions.forEach(consumption => {
-                    const date = new Date(consumption.fecha);
-                    const day = date.getDate();
-                    dailyCounts[day] = (dailyCounts[day] || 0) + 1;
-                });
-                
-                // Ordenar días
-                const sortedDays = Object.keys(dailyCounts).sort((a, b) => a - b);
-                const dailyData = sortedDays.map(day => dailyCounts[day]);
-                
-                if (dailyChart) {
-                    dailyChart.destroy();
-                }
-                
-                const dailyCtx = document.getElementById('daily-chart').getContext('2d');
-                dailyChart = new Chart(dailyCtx, {
-                    type: 'bar',
-                    data: {
-                        labels: sortedDays.map(day => `Día ${day}`),
-                        datasets: [{
-                            label: 'Consumos',
-                            data: dailyData,
-                            backgroundColor: 'rgba(234, 179, 8, 0.7)',
-                            borderColor: 'rgba(234, 179, 8, 1)',
-                            borderWidth: 1,
-                            borderRadius: 4
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        scales: {
-                            y: {
-                                beginAtZero: true,
-                                ticks: {
-                                    stepSize: 1
-                                },
-                                grid: {
-                                    color: 'rgba(51, 65, 85, 0.5)'
-                                }
-                            },
-                            x: {
-                                grid: {
-                                    color: 'rgba(51, 65, 85, 0.5)'
-                                }
+
+                    return `
+                        <tr class="bg-dark-800 border-b border-dark-700 hover:bg-dark-700 transition-all">
+                            <td class="px-6 py-4">${dateString} ${timeString}</td>
+                            <td class="px-6 py-4 font-medium text-white">${consumption.EmployeeName}</td>
+                            <td class="px-6 py-4">${consumption.EmployeeId}</td>
+                            <td class="px-6 py-4 ${mealTypeClass} font-medium">${consumption.FoodType}</td>
+                        </tr>
+                    `;
+                }).join('');
+
+                tableInfo.textContent = `Mostrando ${monthConsumptions.length} consumos de ${monthsNames[selectedMonth]}.`;
+                exportCsvBtn.disabled = false;
+                exportCsvBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                printReportBtn.disabled = false;
+                printReportBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+            }
+
+            // Actualizar gráfico de tipos de comida
+            const mealTypeLabels = Object.keys(mealTypeCounts);
+            const mealTypeData = Object.values(mealTypeCounts);
+
+            if (mealTypeChart) {
+                mealTypeChart.destroy();
+            }
+
+            const mealTypeCtx = document.getElementById('meal-type-chart').getContext('2d');
+            mealTypeChart = new Chart(mealTypeCtx, {
+                type: 'pie',
+                data: {
+                    labels: mealTypeLabels,
+                    datasets: [{
+                        data: mealTypeData,
+                        backgroundColor: chartColors.backgroundColor,
+                        borderColor: chartColors.borderColor,
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                padding: 20,
+                                usePointStyle: true,
+                                pointStyle: 'circle'
                             }
                         },
-                        plugins: {
-                            tooltip: {
-                                backgroundColor: '#1e293b',
-                                titleColor: '#ffffff',
-                                bodyColor: '#e2e8f0',
-                                borderColor: '#334155',
-                                borderWidth: 1,
-                                padding: 12
-                            }
+                        tooltip: {
+                            backgroundColor: '#1e293b',
+                            titleColor: '#ffffff',
+                            bodyColor: '#e2e8f0',
+                            borderColor: '#334155',
+                            borderWidth: 1,
+                            padding: 12,
+                            displayColors: true,
+                            usePointStyle: true
                         }
                     }
-                });
+                }
+            });
+
+            // Actualizar gráfico de consumos diarios
+            const dailyCounts = {};
+
+            monthConsumptions.forEach(consumption => {
+                const date = new Date(consumption.ConsumptionDate);
+                const day = date.getDate();
+                dailyCounts[day] = (dailyCounts[day] || 0) + 1;
+            });
+
+            // Ordenar días
+            const sortedDays = Object.keys(dailyCounts).sort((a, b) => a - b);
+            const dailyData = sortedDays.map(day => dailyCounts[day]);
+
+            if (dailyChart) {
+                dailyChart.destroy();
             }
-            
-            // Evento de cambio de mes
-            monthSelect.addEventListener('change', updateReports);
-            
-            // Exportar a CSV
-            exportCsvBtn.addEventListener('click', function() {
+
+            const dailyCtx = document.getElementById('daily-chart').getContext('2d');
+            dailyChart = new Chart(dailyCtx, {
+                type: 'bar',
+                data: {
+                    labels: sortedDays.map(day => `Día ${day}`),
+                    datasets: [{
+                        label: 'Consumos',
+                        data: dailyData,
+                        backgroundColor: 'rgba(234, 179, 8, 0.7)',
+                        borderColor: 'rgba(234, 179, 8, 1)',
+                        borderWidth: 1,
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                stepSize: 1
+                            },
+                            grid: {
+                                color: 'rgba(51, 65, 85, 0.5)'
+                            }
+                        },
+                        x: {
+                            grid: {
+                                color: 'rgba(51, 65, 85, 0.5)'
+                            }
+                        }
+                    },
+                    plugins: {
+                        tooltip: {
+                            backgroundColor: '#1e293b',
+                            titleColor: '#ffffff',
+                            bodyColor: '#e2e8f0',
+                            borderColor: '#334155',
+                            borderWidth: 1,
+                            padding: 12
+                        }
+                    }
+                }
+            });
+        }
+
+        // --- Event Listeners ---
+
+        // Evento de clic para el botón "Generar Reporte"
+        retrieveReportButton.addEventListener('click', loadAndDisplayReport);
+
+        // Evento de cambio para el selector de meses
+        monthSelect.addEventListener('change', updateReports);
+
+        // Exportar a CSV
+        exportCsvBtn.addEventListener('click', function() {
+            const selectedMonth = monthSelect.value;
+            const [year, month] = selectedMonth.split('-').map(Number);
+
+            // Filtrar consumos del mes seleccionado de los datos globales
+            const monthConsumptions = allConsumptions.filter(consumption => {
+                const date = new Date(consumption.ConsumptionDate);
+                return date.getFullYear() === year && date.getMonth() + 1 === month;
+            });
+
+            // Ordenar por fecha (más reciente primero)
+            monthConsumptions.sort((a, b) => new Date(b.ConsumptionDate) - new Date(a.ConsumptionDate));
+
+            // Crear contenido CSV
+            let csvContent = "data:text/csv;charset=utf-8,";
+            // Encabezados del CSV
+            csvContent += "Fecha,Hora,Empleado,Numero,Tipo de Comida\n";
+
+            monthConsumptions.forEach(consumption => {
+                const date = new Date(consumption.ConsumptionDate);
+                const dateString = date.toLocaleDateString('es-MX');
+                const timeString = date.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' });
+
+                // Escapar comillas dobles en el nombre del empleado para CSV
+                const escapedEmployeeName = `"${consumption.EmployeeName.replace(/"/g, '""')}"`;
+                
+                csvContent += `${dateString},${timeString},${escapedEmployeeName},${consumption.EmployeeId},${consumption.FoodType}\n`;
+            });
+
+            // Crear enlace de descarga
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", `reporte-comedor-${selectedMonth}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
+            // Mostrar mensaje de éxito
+            alert('Archivo CSV descargado correctamente.');
+        });
+
+        // Imprimir reporte
+        printReportBtn.addEventListener('click', function() {
+            // Preparar contenido para imprimir
+            const selectedMonth = monthSelect.value;
+            // Verificar si hay un mes seleccionado y si existe en monthsNames
+            const monthName = monthsNames[selectedMonth] || "Mes no especificado";
+
+            // Abrir ventana de impresión
+            const printWindow = window.open('', '_blank');
+
+            // Crear contenido HTML para imprimir
+            printWindow.document.write(`
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>Reporte de Comedor - ${monthName}</title>
+                    <style>
+                        body {
+                            font-family: Arial, sans-serif;
+                            margin: 20px;
+                            color: #333;
+                        }
+                        h1 {
+                            color: #1e293b;
+                            text-align: center;
+                            margin-bottom: 20px;
+                        }
+                        .header {
+                            text-align: center;
+                            margin-bottom: 30px;
+                        }
+                        .date {
+                            font-size: 14px;
+                            color: #666;
+                            margin-bottom: 20px;
+                            text-align: center;
+                        }
+                        .summary {
+                            display: flex;
+                            justify-content: space-between;
+                            margin-bottom: 30px;
+                            gap: 20px; /* Añadido espacio entre tarjetas */
+                        }
+                        .summary-card {
+                            border: 1px solid #ddd;
+                            border-radius: 8px;
+                            padding: 15px;
+                            flex: 1; /* Para que las tarjetas ocupen el espacio disponible */
+                            text-align: center;
+                            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                        }
+                        .summary-title {
+                            font-size: 16px;
+                            font-weight: bold;
+                            margin-bottom: 10px;
+                            color: #1e293b;
+                        }
+                        .summary-value {
+                            font-size: 24px;
+                            font-weight: bold;
+                            color: #0f172a;
+                        }
+                        table {
+                            width: 100%;
+                            border-collapse: collapse;
+                            margin-top: 20px;
+                        }
+                        th, td {
+                            border: 1px solid #ddd;
+                            padding: 12px;
+                            text-align: left;
+                        }
+                        th {
+                            background-color: #f8f9fa;
+                            font-weight: bold;
+                            color: #1e293b;
+                        }
+                        tr:nth-child(even) {
+                            background-color: #f2f2f2;
+                        }
+                        .footer {
+                            margin-top: 30px;
+                            text-align: center;
+                            font-size: 12px;
+                            color: #666;
+                        }
+                        @media print {
+                            .no-print {
+                                display: none;
+                            }
+                        }
+                    </style>
+                </head>
+                <body>
+                    <div class="header">
+                        <h1>Reporte de Consumos del Comedor</h1>
+                        <div class="date">Período: ${monthName}</div>
+                    </div>
+
+                    <div class="summary">
+                        <div class="summary-card">
+                            <div class="summary-title">Total de Consumos</div>
+                            <div class="summary-value">${totalConsumptionsEl.textContent}</div>
+                        </div>
+                        <div class="summary-card">
+                            <div class="summary-title">Empleados Atendidos</div>
+                            <div class="summary-value">${totalEmployeesEl.textContent}</div>
+                        </div>
+                        <div class="summary-card">
+                            <div class="summary-title">Comida más Popular</div>
+                            <div class="summary-value">${popularMealEl.textContent}</div>
+                        </div>
+                    </div>
+
+                    <h2>Detalle de Consumos</h2>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Fecha</th>
+                                <th>Hora</th>
+                                <th>Empleado</th>
+                                <th>Número</th>
+                                <th>Tipo de Comida</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${getTableRowsForPrint()}
+                        </tbody>
+                    </table>
+
+                    <div class="footer">
+                        <p>Reporte generado el ${new Date().toLocaleDateString('es-MX')} a las ${new Date().toLocaleTimeString('es-MX')}</p>
+                        <p>Sistema de Comedor Empresarial</p>
+                    </div>
+
+                    <div class="no-print">
+                        <button onclick="window.print()" style="margin-top: 20px; padding: 10px 20px; background-color: #0f172a; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                            Imprimir Reporte
+                        </button>
+                    </div>
+                </body>
+                </html>
+            `);
+
+            // Función para generar filas de la tabla para impresión
+            function getTableRowsForPrint() {
                 const selectedMonth = monthSelect.value;
                 const [year, month] = selectedMonth.split('-').map(Number);
-                
+
                 // Filtrar consumos del mes seleccionado
-                const monthConsumptions = consumptions.filter(consumption => {
-                    const date = new Date(consumption.fecha);
+                const monthConsumptions = allConsumptions.filter(consumption => {
+                    const date = new Date(consumption.ConsumptionDate);
                     return date.getFullYear() === year && date.getMonth() + 1 === month;
                 });
-                
+
                 // Ordenar por fecha (más reciente primero)
-                monthConsumptions.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-                
-                // Crear contenido CSV
-                let csvContent = "data:text/csv;charset=utf-8,";
-                csvContent += "Fecha,Hora,Empleado,Número,Tipo de Comida\n";
-                
-                monthConsumptions.forEach(consumption => {
-                    const date = new Date(consumption.fecha);
-                    const dateString = date.toLocaleDateString();
-                    const timeString = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                    
-                    csvContent += `${dateString},${timeString},${consumption.EmployeeName},${consumption.EmployeeId},${consumption.FoodType}\n`;
-                });
-                
-                // Crear enlace de descarga
-                const encodedUri = encodeURI(csvContent);
-                const link = document.createElement("a");
-                link.setAttribute("href", encodedUri);
-                link.setAttribute("download", `reporte-comedor-${selectedMonth}.csv`);
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-                
-                // Mostrar mensaje de éxito
-                alert('Archivo CSV descargado correctamente.');
-            });
-            
-            // Imprimir reporte
-            printReportBtn.addEventListener('click', function() {
-                // Preparar contenido para imprimir
-                const selectedMonth = monthSelect.value;
-                const monthName = months[selectedMonth];
-                
-                // Abrir ventana de impresión
-                const printWindow = window.open('', '_blank');
-                
-                // Crear contenido HTML para imprimir
-                printWindow.document.write(`
-                    <!DOCTYPE html>
-                    <html>
-                    <head>
-                        <title>Reporte de Comedor - ${monthName}</title>
-                        <style>
-                            body {
-                                font-family: Arial, sans-serif;
-                                margin: 20px;
-                                color: #333;
-                            }
-                            h1 {
-                                color: #1e293b;
-                                text-align: center;
-                                margin-bottom: 20px;
-                            }
-                            .header {
-                                text-align: center;
-                                margin-bottom: 30px;
-                            }
-                            .date {
-                                font-size: 14px;
-                                color: #666;
-                                margin-bottom: 20px;
-                                text-align: center;
-                            }
-                            .summary {
-                                display: flex;
-                                justify-content: space-between;
-                                margin-bottom: 30px;
-                            }
-                            .summary-card {
-                                border: 1px solid #ddd;
-                                border-radius: 8px;
-                                padding: 15px;
-                                width: 30%;
-                                text-align: center;
-                            }
-                            .summary-title {
-                                font-size: 16px;
-                                font-weight: bold;
-                                margin-bottom: 10px;
-                                color: #1e293b;
-                            }
-                            .summary-value {
-                                font-size: 24px;
-                                font-weight: bold;
-                                color: #0f172a;
-                            }
-                            table {
-                                width: 100%;
-                                border-collapse: collapse;
-                                margin-top: 20px;
-                            }
-                            th, td {
-                                border: 1px solid #ddd;
-                                padding: 12px;
-                                text-align: left;
-                            }
-                            th {
-                                background-color: #f8f9fa;
-                                font-weight: bold;
-                                color: #1e293b;
-                            }
-                            tr:nth-child(even) {
-                                background-color: #f2f2f2;
-                            }
-                            .footer {
-                                margin-top: 30px;
-                                text-align: center;
-                                font-size: 12px;
-                                color: #666;
-                            }
-                            @media print {
-                                .no-print {
-                                    display: none;
-                                }
-                            }
-                        </style>
-                    </head>
-                    <body>
-                        <div class="header">
-                            <h1>Reporte de Consumos del Comedor</h1>
-                            <div class="date">Período: ${monthName}</div>
-                        </div>
-                        
-                        <div class="summary">
-                            <div class="summary-card">
-                                <div class="summary-title">Total de Consumos</div>
-                                <div class="summary-value">${totalConsumptionsEl.textContent}</div>
-                            </div>
-                            <div class="summary-card">
-                                <div class="summary-title">Empleados Atendidos</div>
-                                <div class="summary-value">${totalEmployeesEl.textContent}</div>
-                            </div>
-                            <div class="summary-card">
-                                <div class="summary-title">Comida más Popular</div>
-                                <div class="summary-value">${popularMealEl.textContent}</div>
-                            </div>
-                        </div>
-                        
-                        <h2>Detalle de Consumos</h2>
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Fecha</th>
-                                    <th>Hora</th>
-                                    <th>Empleado</th>
-                                    <th>Número</th>
-                                    <th>Tipo de Comida</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                ${getTableRowsForPrint()}
-                            </tbody>
-                        </table>
-                        
-                        <div class="footer">
-                            <p>Reporte generado el ${new Date().toLocaleDateString()} a las ${new Date().toLocaleTimeString()}</p>
-                            <p>Sistema de Comedor Empresarial</p>
-                        </div>
-                        
-                        <div class="no-print">
-                            <button onclick="window.print()" style="margin-top: 20px; padding: 10px 20px; background-color: #0f172a; color: white; border: none; border-radius: 4px; cursor: pointer;">
-                                Imprimir Reporte
-                            </button>
-                        </div>
-                    </body>
-                    </html>
-                `);
-                
-                // Función para generar filas de la tabla para impresión
-                function getTableRowsForPrint() {
-                    const selectedMonth = monthSelect.value;
-                    const [year, month] = selectedMonth.split('-').map(Number);
-                    
-                    // Filtrar consumos del mes seleccionado
-                    const monthConsumptions = consumptions.filter(consumption => {
-                        const date = new Date(consumption.fecha);
-                        return date.getFullYear() === year && date.getMonth() + 1 === month;
-                    });
-                    
-                    // Ordenar por fecha (más reciente primero)
-                    monthConsumptions.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-                    
-                    return monthConsumptions.map(consumption => {
-                        const date = new Date(consumption.fecha);
-                        const dateString = date.toLocaleDateString();
-                        const timeString = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                        
-                        return `
-                            <tr>
-                                <td>${dateString}</td>
-                                <td>${timeString}</td>
-                                <td>${consumption.EmployeeName}</td>
-                                <td>${consumption.EmployeeId}</td>
-                                <td>${consumption.FoodType}</td>
-                            </tr>
-                        `;
-                    }).join('');
-                }
-                
-                printWindow.document.close();
-            });
-            
-            // Inicializar reportes con el primer mes
-            if (sortedMonths.length > 0) {
-                updateReports();
+                monthConsumptions.sort((a, b) => new Date(b.ConsumptionDate) - new Date(a.ConsumptionDate));
+
+                return monthConsumptions.map(consumption => {
+                    const date = new Date(consumption.ConsumptionDate);
+                    const dateString = date.toLocaleDateString('es-MX');
+                    const timeString = date.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' });
+
+                    return `
+                        <tr>
+                            <td>${dateString}</td>
+                            <td>${timeString}</td>
+                            <td>${consumption.EmployeeName}</td>
+                            <td>${consumption.EmployeeId}</td>
+                            <td>${consumption.FoodType}</td>
+                        </tr>
+                    `;
+                }).join('');
             }
-        } catch (error) {
-            console.error('Error al cargar consumos:', error);
-            consumptionTableBody.innerHTML = `
-                <tr class="bg-dark-800 border-b border-dark-700">
-                    <td colspan="4" class="px-6 py-10 text-center text-red-500">
-                        <p>Error al cargar los datos de consumo. Por favor, inténtalo más tarde.</p>
-                    </td>
-                </tr>
-            `;
-        }
+
+            printWindow.document.close();
+            printWindow.focus(); // Enfocar la ventana de impresión
         });
-        
-    </script>
+
+        // Al cargar la página, inicializa la UI con un estado vacío o de "espera"
+        // y prepara los listeners, pero no carga datos hasta que el botón sea presionado.
+        updateReports(); // Llama para establecer el estado inicial de "Selecciona un mes..."
+    });
+</script>
 
     <!-- Flowbite JS para funcionalidad de componentes UI -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/flowbite/2.2.0/flowbite.min.js"></script>
