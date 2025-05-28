@@ -339,9 +339,8 @@
     </div>
 
     <!-- JavaScript para funcionalidad -->
-  <script>
-    // Esta variable almacenará la lista de empleados obtenida de la API.
-    let employees = []; 
+ <script>
+    let employees = []; // Esta variable almacenará la lista de empleados.
     let selectedEmployee = null;
     let newPhotoFile = null;
     let newPhotoUrl = null;
@@ -365,17 +364,20 @@
     // Función para obtener los empleados de la API
     async function fetchEmployees() {
         try {
-            // ¡Aquí está el cambio clave! Usamos tu nuevo endpoint para todos los empleados.
             const response = await fetch('https://jnhnlieyq9.execute-api.us-east-2.amazonaws.com/default/api/employees');
             
             if (!response.ok) {
-                // Si la respuesta no es exitosa (ej. 404, 500), lanzamos un error.
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
             const data = await response.json();
             
-            // Asumiendo que tu API devuelve directamente un array de objetos de empleado.
-            employees = data; 
+            // ¡Aquí está el cambio clave! Mapeamos los datos de la API a la estructura que tu script espera.
+            employees = data.map(employee => ({
+                id: String(employee.Id), // Convertimos a String para asegurar consistencia con tus IDs anteriores
+                name: employee.Name,
+                photo: employee.PhotoUrl || '/placeholder.svg?height=200&width=200' // Usa PhotoUrl o un placeholder si no hay foto
+            }));
+            
             renderEmployees(employees); // Renderiza los empleados una vez cargados
         } catch (error) {
             console.error('Error al obtener los empleados:', error);
@@ -395,7 +397,6 @@
 
         employeesToRender.forEach(employee => {
             const employeeDiv = document.createElement('div');
-            // Añade la clase 'selected' si el empleado actual es el que está seleccionado
             employeeDiv.className = `p-3 rounded-lg cursor-pointer transition-all flex items-center gap-3 bg-dark-700 hover:bg-dark-600 border border-dark-600 ${selectedEmployee && selectedEmployee.id === employee.id ? 'selected' : ''}`;
             employeeDiv.onclick = (event) => selectEmployee(employee, event.currentTarget); 
             
@@ -419,7 +420,6 @@
     // ---
     // Función para filtrar empleados
     function filterEmployees(searchTerm) {
-        // La función de filtrado sigue operando sobre la variable `employees`
         const filtered = employees.filter(employee => 
             employee.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
             employee.id.includes(searchTerm)
@@ -507,32 +507,33 @@
         savePhotoBtn.disabled = true;
         cancelBtn.disabled = true;
 
-        // **AQUÍ ES DONDE ENVIARÍAS LA FOTO A TU API REALMENTE**
-        // Necesitarías un endpoint en tu API para subir la foto, por ejemplo:
-        // PUT /api/employees/{id}/photo o POST /api/photos
+        // Aquí es donde harías la llamada real a tu API para subir la foto.
+        // Necesitas un endpoint que acepte la nueva foto para un empleado específico.
+        // Por ejemplo, un PUT a /api/employees/{id}/photo o similar.
         // Deberías usar FormData para enviar el archivo.
 
         /*
         const formData = new FormData();
-        formData.append('photo', newPhotoFile); // 'photo' debe coincidir con el nombre esperado en tu API
+        formData.append('photo', newPhotoFile); // 'photo' debe ser el nombre esperado por tu API para el archivo
 
         try {
+            // Ejemplo de endpoint de subida (adapta según tu API)
             const uploadResponse = await fetch(`https://jnhnlieyq9.execute-api.us-east-2.amazonaws.com/default/api/employees/${selectedEmployee.id}/photo`, {
-                method: 'PUT', // O 'POST', dependiendo de cómo esté configurada tu API para subir fotos
+                method: 'PUT', // o 'POST'
                 body: formData
             });
 
             if (!uploadResponse.ok) {
                 throw new Error('Error al subir la foto');
             }
-            // Si tu API devuelve la nueva URL de la foto o alguna confirmación, úsala aquí.
-            // const uploadData = await uploadResponse.json();
-            // newPhotoUrl = uploadData.photoUrl; 
-            
-            // Después de la subida exitosa, actualiza la lista local.
+            // Si la API te devuelve la URL de la foto subida, úsala para actualizar:
+            // const result = await uploadResponse.json();
+            // const updatedPhotoUrl = result.newPhotoUrl; // Ajusta según la respuesta de tu API
+
+            // Actualizar la foto del empleado en la lista local 'employees'
             const employeeIndex = employees.findIndex(emp => emp.id === selectedEmployee.id);
             if (employeeIndex !== -1) {
-                employees[employeeIndex].photo = newPhotoUrl; // Usa la URL devuelta por la API si es diferente
+                employees[employeeIndex].photo = newPhotoUrl; // Si no recibes la URL, usa la URL de preview
                 selectedEmployee.photo = newPhotoUrl;
                 currentPhoto.innerHTML = `<img src="${newPhotoUrl}" alt="${selectedEmployee.name}">`;
             }
@@ -555,7 +556,6 @@
         }
         alert('Foto actualizada correctamente (simulado)');
 
-        // Restablecer el estado del botón y la interfaz
         resetNewPhoto();
         savePhotoBtn.innerHTML = `
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -566,7 +566,6 @@
         savePhotoBtn.disabled = false;
         cancelBtn.disabled = false;
 
-        // Volver a renderizar la lista de empleados para asegurar que la foto actualizada se muestre si es necesario
         renderEmployees(employees);
     }
 
