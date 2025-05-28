@@ -343,6 +343,7 @@
         // Obtener una referencia al botón "Generar Reporte" por su ID
         const retrieveReportButton = document.getElementById('retrieveReportBtn'); // Asegúrate de que este ID coincida con tu HTML
 
+        
         // Variables para los gráficos
         let mealTypeChart;
         let dailyChart;
@@ -414,22 +415,6 @@
             return;
         }
 
-        // Habilitar el selector de meses
-        monthSelect.disabled = false;
-
-        // Llenar selector de meses
-        Object.keys(monthsNames).forEach(key => delete monthsNames[key]); // Limpiar el objeto de meses
-        allConsumptions.forEach(consumption => {
-            const date = new Date(consumption.ConsumptionDate);
-            const monthYear = `${date.getFullYear()}-${date.getMonth() + 1}`;
-            // Establecer el locale 'es-MX' para formatear el nombre del mes
-            const monthName = date.toLocaleString('es-MX', { month: 'long', year: 'numeric' }); 
-            // Capitalizar la primera letra del mes
-            monthsNames[monthYear] = monthName.charAt(0).toUpperCase() + monthName.slice(1);
-        });
-
-        // Ordenar meses (más reciente primero)
-        const sortedMonths = Object.keys(monthsNames).sort().reverse();
 
 
         // Habilitar botones de exportación
@@ -447,7 +432,6 @@
         retrieveReportButton.disabled = false;
         retrieveReportButton.classList.remove('opacity-50', 'cursor-not-allowed');
         
-        // Error en selector de meses (NECESITA innerHTML para inyectar <option> HTML)
         tableInfo.textContent = "Error al cargar datos de consumo."; // Correcto: solo texto
         exportCsvBtn.disabled = true;
         exportCsvBtn.classList.add('opacity-50', 'cursor-not-allowed');
