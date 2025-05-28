@@ -372,129 +372,95 @@
         const monthsNames = {};
 
         // Función para cargar los datos de la API y mostrar el reporte inicial
-        async function loadAndDisplayReport() {
-            try {
-                // Deshabilitar el botón mientras se carga
-                retrieveReportButton.disabled = true;
-                retrieveReportButton.classList.add('opacity-50', 'cursor-not-allowed');
-                // Mostrar un mensaje de carga (opcional, puedes agregar un spinner en el HTML)
-                tableInfo.textContent = "Cargando datos...";
+       async function loadAndDisplayReport() {
+    try {
+        // Deshabilitar el botón mientras se carga
+        retrieveReportButton.disabled = true;
+        retrieveReportButton.classList.add('opacity-50', 'cursor-not-allowed');
+        // Mostrar un mensaje de carga (opcional, puedes agregar un spinner en el HTML)
+        tableInfo.textContent = "Cargando datos..."; // Correcto: solo texto
 
-                const response = await fetch('https://jnhnlieyq9.execute-api.us-east-2.amazonaws.com/default/api/reports/detailed');
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                allConsumptions = await response.json(); // Almacenar los consumos en la variable global
-
-                // Habilitar el botón después de la carga
-                retrieveReportButton.disabled = false;
-                retrieveReportButton.classList.remove('opacity-50', 'cursor-not-allowed');
-
-                // Si no hay consumos, mostrar mensaje
-                if (allConsumptions.length === 0) {
-                    // Actualizar tabla
-                    consumptionTableBody.innerHTML = `
-                        <tr class="bg-dark-800 border-b border-dark-700">
-                            <td colspan="4" class="px-6 py-10 text-center">
-                                <div class="flex flex-col items-center text-gray-500">
-                                    <svg class="w-12 h-12 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                    </svg>
-                                    <p class="text-lg font-medium">No hay consumos registrados</p>
-                                    <p class="mt-1">Registra consumos para generar reportes</p>
-                                </div>
-                            </td>
-                        </tr>
-                    `;
-
-                    // Actualizar selector de meses
-                    monthSelect.innerHTML = `<option value="" disabled selected>No hay datos disponibles</option>`;
-                    monthSelect.disabled = true; // Deshabilitar el selector si no hay datos
-                    
-                    // Actualizar información de la tabla
-                    tableInfo.textContent = "No hay datos de consumo disponibles.";
-
-                    // Deshabilitar botones de exportación
-                    exportCsvBtn.disabled = true;
-                    exportCsvBtn.classList.add('opacity-50', 'cursor-not-allowed');
-                    printReportBtn.disabled = true;
-                    printReportBtn.classList.add('opacity-50', 'cursor-not-allowed');
-
-                    // Destruir gráficos si existen
-                    if (mealTypeChart) mealTypeChart.destroy();
-                    if (dailyChart) dailyChart.destroy();
-
-                    // Limpiar tarjetas de resumen
-                    totalConsumptionsEl.textContent = '0';
-                    totalEmployeesEl.textContent = '0';
-                    popularMealEl.textContent = '-';
-
-                    return;
-                }
-
-                // Habilitar el selector de meses
-                monthSelect.disabled = false;
-
-                // Llenar selector de meses
-                Object.keys(monthsNames).forEach(key => delete monthsNames[key]); // Limpiar el objeto de meses
-                allConsumptions.forEach(consumption => {
-                    const date = new Date(consumption.ConsumptionDate);
-                    const monthYear = `${date.getFullYear()}-${date.getMonth() + 1}`;
-                    // Establecer el locale 'es-MX' para formatear el nombre del mes
-                    const monthName = date.toLocaleString('es-MX', { month: 'long', year: 'numeric' }); 
-                    // Capitalizar la primera letra del mes
-                    monthsNames[monthYear] = monthName.charAt(0).toUpperCase() + monthName.slice(1);
-                });
-
-                // Ordenar meses (más reciente primero)
-                const sortedMonths = Object.keys(monthsNames).sort().reverse();
-
-                // Actualizar selector de meses
-                monthSelect.innerHTML = '';
-                sortedMonths.forEach(monthKey => {
-                    const option = document.createElement('option');
-                    option.value = monthKey;
-                    option.textContent = monthsNames[monthKey];
-                    monthSelect.appendChild(option);
-                });
-
-                // Habilitar botones de exportación
-                exportCsvBtn.disabled = false;
-                exportCsvBtn.classList.remove('opacity-50', 'cursor-not-allowed');
-                printReportBtn.disabled = false;
-                printReportBtn.classList.remove('opacity-50', 'cursor-not-allowed');
-
-                // Seleccionar el mes más reciente por defecto
-                monthSelect.value = sortedMonths[0];
-                updateReports(); // Llamar para mostrar el reporte del mes más reciente
-            } catch (error) {
-                console.error('Error al cargar consumos:', error);
-                // Habilitar el botón incluso si hay un error para permitir reintentar
-                retrieveReportButton.disabled = false;
-                retrieveReportButton.classList.remove('opacity-50', 'cursor-not-allowed');
-                
-                consumptionTableBody.innerHTML = `
-                    <tr class="bg-dark-800 border-b border-dark-700">
-                        <td colspan="4" class="px-6 py-10 text-center text-red-500">
-                            <p>Error al cargar los datos de consumo. Por favor, inténtalo más tarde o verifica la conexión.</p>
-                            <p>Detalle: ${error.message}</p>
-                        </td>
-                    </tr>
-                `;
-                monthSelect.disabled = true;
-                tableInfo.textContent = "Error al cargar datos de consumo.";
-                exportCsvBtn.disabled = true;
-                exportCsvBtn.classList.add('opacity-50', 'cursor-not-allowed');
-                printReportBtn.disabled = true;
-                printReportBtn.classList.add('opacity-50', 'cursor-not-allowed');
-                if (mealTypeChart) mealTypeChart.destroy();
-                if (dailyChart) dailyChart.destroy();
-                // Limpiar tarjetas de resumen
-                totalConsumptionsEl.textContent = '0';
-                totalEmployeesEl.textContent = '0';
-                popularMealEl.textContent = '-';
-            }
+        const response = await fetch('https://jnhnlieyq9.execute-api.us-east-2.amazonaws.com/default/api/reports/detailed');
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
         }
+        allConsumptions = await response.json(); // Almacenar los consumos en la variable global
+
+        // Habilitar el botón después de la carga
+        retrieveReportButton.disabled = false;
+        retrieveReportButton.classList.remove('opacity-50', 'cursor-not-allowed');
+
+        // Si no hay consumos, mostrar mensaje
+        if (allConsumptions.length === 0) {
+            
+            // Actualizar información de la tabla (Correcto: solo texto)
+            tableInfo.textContent = "No hay datos de consumo disponibles.";
+
+            // Deshabilitar botones de exportación
+            exportCsvBtn.disabled = true;
+            exportCsvBtn.classList.add('opacity-50', 'cursor-not-allowed');
+            printReportBtn.disabled = true;
+            printReportBtn.classList.add('opacity-50', 'cursor-not-allowed');
+
+            // Destruir gráficos si existen
+            if (mealTypeChart) mealTypeChart.destroy();
+            if (dailyChart) dailyChart.destroy();
+
+            // Limpiar tarjetas de resumen (Correcto: solo texto)
+            totalConsumptionsEl.textContent = '0';
+            totalEmployeesEl.textContent = '0';
+            popularMealEl.textContent = '-';
+
+            return;
+        }
+
+        // Habilitar el selector de meses
+        monthSelect.disabled = false;
+
+        // Llenar selector de meses
+        Object.keys(monthsNames).forEach(key => delete monthsNames[key]); // Limpiar el objeto de meses
+        allConsumptions.forEach(consumption => {
+            const date = new Date(consumption.ConsumptionDate);
+            const monthYear = `${date.getFullYear()}-${date.getMonth() + 1}`;
+            // Establecer el locale 'es-MX' para formatear el nombre del mes
+            const monthName = date.toLocaleString('es-MX', { month: 'long', year: 'numeric' }); 
+            // Capitalizar la primera letra del mes
+            monthsNames[monthYear] = monthName.charAt(0).toUpperCase() + monthName.slice(1);
+        });
+
+        // Ordenar meses (más reciente primero)
+        const sortedMonths = Object.keys(monthsNames).sort().reverse();
+
+
+        // Habilitar botones de exportación
+        exportCsvBtn.disabled = false;
+        exportCsvBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+        printReportBtn.disabled = false;
+        printReportBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+
+        // Seleccionar el mes más reciente por defecto
+        monthSelect.value = sortedMonths[0];
+        updateReports(); // Llamar para mostrar el reporte del mes más reciente
+    } catch (error) {
+        console.error('Error al cargar consumos:', error);
+        // Habilitar el botón incluso si hay un error para permitir reintentar
+        retrieveReportButton.disabled = false;
+        retrieveReportButton.classList.remove('opacity-50', 'cursor-not-allowed');
+        
+        // Error en selector de meses (NECESITA innerHTML para inyectar <option> HTML)
+        tableInfo.textContent = "Error al cargar datos de consumo."; // Correcto: solo texto
+        exportCsvBtn.disabled = true;
+        exportCsvBtn.classList.add('opacity-50', 'cursor-not-allowed');
+        printReportBtn.disabled = true;
+        printReportBtn.classList.add('opacity-50', 'cursor-not-allowed');
+        if (mealTypeChart) mealTypeChart.destroy();
+        if (dailyChart) dailyChart.destroy();
+        // Limpiar tarjetas de resumen (Correcto: solo texto)
+        totalConsumptionsEl.textContent = '0';
+        totalEmployeesEl.textContent = '0';
+        popularMealEl.textContent = '-';
+    }
+}
 
         // Función para actualizar los reportes basándose en el mes seleccionado
         function updateReports() {
