@@ -306,7 +306,6 @@
         let mealTypeChart = null;
         let dailyChart = null;
         let currentPeriodType = 'monthly';
-
         // Almacenará los datos de los reportes obtenidos de la API
         let reportData = {};
 
@@ -343,7 +342,7 @@
                 }
                 const data = await response.json();
                 toggleLoadingIndicator(false);
-                console.log('hola', datos);
+                console.log('hola', data);
                 // Asegurarse de que data.consumptions sea un array, incluso si está vacío o indefinido
                 return data;
             } catch (error) {
