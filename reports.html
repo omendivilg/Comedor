@@ -372,6 +372,10 @@
         // Objeto para almacenar nombres de meses (para impresión y mensajes)
         const monthsNames = {};
 
+        function getMonthNumber() {
+        const date = new Date();
+        return date.getMonth(); // Devuelve un número (0-11)
+    }
         // Función para cargar los datos de la API y mostrar el reporte inicial
        async function loadAndDisplayReport() {
     try {
@@ -424,7 +428,7 @@
         printReportBtn.classList.remove('opacity-50', 'cursor-not-allowed');
 
         // Seleccionar el mes más reciente por defecto
-        monthSelect.value = sortedMonths[0];
+        monthSelect.value = getMonthNumber(); // Asignar el mes actual como valor por defecto
         updateReports(); // Llamar para mostrar el reporte del mes más reciente
     } catch (error) {
         console.error('Error al cargar consumos:', error);
