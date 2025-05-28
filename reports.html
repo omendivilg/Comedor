@@ -333,16 +333,17 @@
 
     // **Nuevas constantes para los endpoints de tu API**
     const API_BASE_URL = 'https://jnhnlieyq9.execute-api.us-east-2.amazonaws.com/default/api'; 
-    const MONTHLY_REPORT_ENDPOINT = `${API_BASE_URL}/reports/executive`; // Ejemplo: /api/reports/monthly?month=2025-05
-    const DAILY_REPORT_ENDPOINT = `${API_BASE_URL}/reports/detailed?days={days}`;     // Ejemplo: /api/reports/daily?date=2025-05-27
+    const MONTHLY_REPORT_ENDPOINT = `${API_BASE_URL}/reports/executive`; // Este endpoint ahora da el reporte del mes pasado directamente
+    const DAILY_REPORT_ENDPOINT = `${API_BASE_URL}/reports/detailed`; 
 
     // Función para obtener datos del reporte desde los endpoints
     async function fetchReportData(type, period) {
         let url = '';
         if (type === 'monthly') {
-            url = `${MONTHLY_REPORT_ENDPOINT}?month=${period}`;
+            url = `${MONTHLY_REPORT_ENDPOINT}`;
         } else { // type === 'daily'
-            url = `${DAILY_REPORT_ENDPOINT}?date=${period}`;
+            // Para el endpoint diario, el "period" es el número de días
+            url = `${DAILY_REPORT_ENDPOINT}?days=${period}`;
         }
 
         try {
@@ -351,10 +352,6 @@
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
             const data = await response.json();
-            // Asegúrate de que la estructura de `data` coincida con lo que espera `updateReportData`.
-            // Si tu API devuelve un array de consumos directamente, podrías hacer:
-            // return { consumptions: data };
-            // Si devuelve un objeto con una propiedad 'consumptions', entonces:
             return data; 
         } catch (error) {
             console.error(`Error al obtener datos del reporte ${type} para el período ${period}:`, error);
@@ -363,33 +360,20 @@
         }
     }
 
-    // Función para obtener los últimos N meses únicos (se mantiene igual, usa fechas locales)
+    // Función para obtener el mes pasado
     function getAvailableMonths() {
-        const months = new Set();
         const today = new Date();
-        
-        for (let i = 0; i < 90; i++) { // Últimos 3 meses
-            const date = new Date();
-            date.setDate(today.getDate() - i);
-            const monthKey = `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}`;
-            months.add(monthKey);
-        }
-        
-        return Array.from(months).sort().reverse();
+        const lastMonth = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+        const monthKey = `${lastMonth.getFullYear()}-${(lastMonth.getMonth() + 1).toString().padStart(2, '0')}`;
+        return [monthKey]; // Solo el mes pasado
     }
 
-    // Función para obtener los últimos 30 días (se mantiene igual, usa fechas locales)
+    // Función para obtener números de días del 1 al 31
     function getAvailableDays() {
         const days = [];
-        const today = new Date();
-        
-        for (let i = 0; i < 30; i++) {
-            const date = new Date();
-            date.setDate(today.getDate() - i);
-            const dateStr = date.toISOString().split('T')[0];
-            days.push(dateStr);
+        for (let i = 1; i <= 31; i++) {
+            days.push(i.toString());
         }
-        
         return days;
     }
 
@@ -398,7 +382,24 @@
         setupEventListeners();
         populatePeriodSelector();
         updateHelpText(); // Asegura que el texto de ayuda inicial sea correcto
+        // Cargar el reporte mensual del mes pasado al iniciar la página
+        loadInitialMonthlyReport();
     }
+
+    async function loadInitialMonthlyReport() {
+        const select = document.getElementById('period-select');
+        if (currentPeriodType === 'monthly') {
+            const lastMonthOption = select.querySelector('option[value]:not([disabled])');
+            if (lastMonthOption) {
+                select.value = lastMonthOption.value; // Selecciona el mes pasado
+                const data = await fetchReportData(currentPeriodType, lastMonthOption.value);
+                reportData = data;
+                updateReportData(data, currentPeriodType, lastMonthOption.value);
+                updateChartTitles(currentPeriodType);
+            }
+        }
+    }
+
 
     // Función para configurar event listeners
     function setupEventListeners() {
@@ -420,7 +421,6 @@
         currentPeriodType = event.target.value;
         populatePeriodSelector();
         updateHelpText();
-        // Limpia los gráficos y la tabla cuando cambia el tipo de reporte
         clearReportDisplay(); 
     }
 
@@ -428,9 +428,9 @@
     function updateHelpText() {
         const helpText = document.getElementById('period-help-text');
         if (currentPeriodType === 'daily') {
-            helpText.textContent = 'Selecciona un día específico de los últimos 30 días';
+            helpText.textContent = 'Selecciona el número de días hacia atrás para ver el reporte';
         } else {
-            helpText.textContent = 'Selecciona un mes para ver los reportes correspondientes';
+            helpText.textContent = 'Reporte ejecutivo del mes pasado';
         }
     }
 
@@ -450,13 +450,13 @@
         select.appendChild(defaultOption);
         
         if (currentPeriodType === 'monthly') {
-            // Agregar meses disponibles
+            // Solo se muestra el mes pasado
             const months = getAvailableMonths();
-            months.forEach(month => {
+            if (months.length > 0) {
+                const month = months[0];
                 const option = document.createElement('option');
                 option.value = month;
                 
-                // Formatear el nombre del mes
                 const [year, monthNum] = month.split('-');
                 const monthNames = [
                     'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
@@ -464,28 +464,14 @@
                 ];
                 option.textContent = `${monthNames[parseInt(monthNum) - 1]} ${year}`;
                 select.appendChild(option);
-            });
+            }
         } else {
-            // Agregar días disponibles
+            // Agregar números de días disponibles
             const days = getAvailableDays();
-            days.forEach(day => {
+            days.forEach(dayNum => {
                 const option = document.createElement('option');
-                option.value = day;
-                
-                // Formatear la fecha
-                const date = new Date(day + 'T00:00:00');
-                const dayNames = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
-                const monthNames = [
-                    'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
-                    'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
-                ];
-                
-                const dayName = dayNames[date.getDay()];
-                const dayNum = date.getDate();
-                const monthName = monthNames[date.getMonth()];
-                const year = date.getFullYear();
-                
-                option.textContent = `${dayName}, ${dayNum} de ${monthName} ${year}`;
+                option.value = dayNum;
+                option.textContent = `Últimos ${dayNum} días`;
                 select.appendChild(option);
             });
         }
@@ -569,8 +555,7 @@
         const tableInfo = document.getElementById('table-info');
         let periodText;
         if (type === 'daily') {
-            const date = new Date(period + 'T00:00:00');
-            periodText = `día ${date.toLocaleDateString('es-ES')}`;
+            periodText = `últimos ${period} días`;
         } else {
             const [year, month] = period.split('-');
             const monthNames = [
@@ -579,7 +564,7 @@
             ];
             periodText = `mes de ${monthNames[parseInt(month) - 1]} ${year}`;
         }
-        tableInfo.textContent = `Mostrando ${consumptions.length} registros para el ${periodText}.`;
+        tableInfo.textContent = `Mostrando ${consumptions.length} registros para el período: ${periodText}.`;
     }
 
     // Función para actualizar las tarjetas de resumen
@@ -622,6 +607,7 @@
         // Destruir gráfico anterior si existe
         if (mealTypeChart) {
             mealTypeChart.destroy();
+            mealTypeChart = null;
         }
         
         mealTypeChart = new Chart(ctx, {
@@ -672,6 +658,7 @@
         // Destruir gráfico anterior si existe
         if (dailyChart) {
             dailyChart.destroy();
+            dailyChart = null;
         }
         
         dailyChart = new Chart(ctx, {
