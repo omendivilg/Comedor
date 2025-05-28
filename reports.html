@@ -497,7 +497,7 @@
             // Obtener los datos del endpoint
             const data = await fetchReportData(currentPeriodType, selectedValue);
             // Ensure data.consumptions is an array, even if empty or undefined from API
-            reportData = { consumptions: data.consumptions || [] }; // Store the fetched data
+            reportData = { consumptions: data || [] }; // If 'data' could also be undefined/null
 
             updateReportData(reportData, currentPeriodType, selectedValue);
             updateChartTitles(currentPeriodType);
