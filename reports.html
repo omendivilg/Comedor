@@ -343,6 +343,8 @@
                 }
                 const data = await response.json();
                 toggleLoadingIndicator(false);
+                console.log('hola', datos);
+                // Asegurarse de que data.consumptions sea un array, incluso si está vacío o indefinido
                 return data;
             } catch (error) {
                 console.error(`Error al obtener datos del reporte ${type} para el período ${period}:`, error);
@@ -351,7 +353,7 @@
                 return { consumptions: [] };
             }
         }
-        console.log('hola', data); // revisar que pedo
+
         // Función para obtener el mes pasado
         function getAvailableMonths() {
             const today = new Date();
